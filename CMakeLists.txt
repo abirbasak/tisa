@@ -6,6 +6,7 @@ file(GLOB_RECURSE HEADERS include/*.hpp)
 file(GLOB_RECURSE SOURCES source/*.cpp)
 add_library(tisa INTERFACE)
 
+add_custom_target(tisa-code SOURCES ${HEADERS} ${SOURCES})
 target_include_directories(tisa INTERFACE include )
 target_compile_definitions(tisa INTERFACE )
 target_compile_features(tisa INTERFACE cxx_std_17)
