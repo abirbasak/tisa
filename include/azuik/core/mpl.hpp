@@ -7,7 +7,7 @@ namespace azuik
     namespace core
     {
         // a few named types
-        using byte = unsigned char;
+        using byte  = unsigned char;
         using sbyte = signed char;
 
         using sshort = signed short; // same as short
@@ -19,13 +19,13 @@ namespace azuik
         using slong = signed long; // same as long
         using ulong = unsigned long;
 
-        using llong = long long;
+        using llong  = long long;
         using sllong = signed long long; // same as long long
         using ullong = unsigned long long;
 
         using ldouble = long double;
 
-        using size_t = ::std::size_t;
+        using size_t    = ::std::size_t;
         using ptrdiff_t = ::std::ptrdiff_t;
     } // namespace core
 
@@ -66,14 +66,14 @@ namespace azuik
         template <class I, I x>
         struct integral_constant
         {
-            using type = integral_constant;
-            using value_type = I;
+            using type                    = integral_constant;
+            using value_type              = I;
             static value_type const value = x;
         };
 
         template <bool x>
-        using bool_c = integral_constant<bool, x>;
-        using true_c = bool_c<true>;
+        using bool_c  = integral_constant<bool, x>;
+        using true_c  = bool_c<true>;
         using false_c = bool_c<false>;
 
         template <byte x>
@@ -118,26 +118,22 @@ namespace azuik
         template <class F, class... Fs>
         struct overloaded<F, Fs...> : F, overloaded<Fs...>
         {
-            explicit overloaded(F &&f, Fs &&... fs) : F{f}, Fs{fs}...
-            {
-            }
-            using F::operator();
+            explicit overloaded(F&& f, Fs&&... fs) : F{f}, Fs{fs}... {}
+            using F::                operator();
             using overloaded<Fs...>::operator();
         };
         template <class F>
         struct overloaded<F> : F
         {
-            explicit overloaded(F &&f) : F{f}
-            {
-            }
+            explicit overloaded(F&& f) : F{f} {}
         };
 
         struct overload_fn
         {
             template <class... Fs>
-            overloaded<Fs...> operator()(Fs &&... fs) const
+            overloaded<Fs...> operator()(Fs&&... fs) const
             {
-                return overloaded<Fs...>(static_cast<Fs &&>(fs)...);
+                return overloaded<Fs...>(static_cast<Fs&&>(fs)...);
             }
         } const overload{};
     } // namespace core
@@ -237,13 +233,14 @@ namespace azuik
         constexpr bool disallow = !require<B...>;
 
         template <template <class...> class Expr, class... Args>
-        constexpr bool is_detected = impl::detector<void_, when<>, Expr, Args...>{};
+        constexpr bool is_detected = impl::detector<void_c, when<>, Expr, Args...>{};
 
         template <template <class...> class Expr, class... Args>
         constexpr bool exists = is_detected<Expr, Args...>;
 
         template <template <class...> class Expr, class... Args>
-        using detected_type = typename impl::detector<void_, defaulted, Expr, Args...>::detected_type;
+        using detected_type =
+            typename impl::detector<void_c, defaulted, Expr, Args...>::detected_type;
 
         template <class Expected, template <class...> class Expr, class... Args>
         constexpr bool is_detected_exact = ::std::is_same<Expected, detected_type<Expr, Args...>>{};
@@ -252,7 +249,8 @@ namespace azuik
         constexpr bool identical_to = is_detected_exact<Expected, Expr, Args...>;
 
         template <class To, template <class...> class Expr, class... Args>
-        constexpr bool is_detected_convertible = ::std::is_convertible<detected_type<Expr, Args...>, To>{};
+        constexpr bool is_detected_convertible =
+            ::std::is_convertible<detected_type<Expr, Args...>, To>{};
 
         template <class To, template <class...> class Expr, class... Args>
         constexpr bool converts_to = is_detected_convertible<To, Expr, Args...>;
@@ -261,7 +259,6 @@ namespace azuik
 
     namespace core
     {
-
         template <bool C, class T, class F>
         struct Cond_c : identity<T>
         {
@@ -408,10 +405,12 @@ namespace azuik
         constexpr bool is_trivially_constructible = ::std::is_trivially_constructible<T>{};
         /// returns true if type T is trivially copy constructible.
         template <class T>
-        constexpr bool is_trivially_copy_constructible = ::std::is_trivially_copy_constructible<T>{};
+        constexpr bool is_trivially_copy_constructible =
+            ::std::is_trivially_copy_constructible<T>{};
         /// returns true if type T is trivially move constructible.
         template <class T>
-        constexpr bool is_trivially_move_constructible = ::std::is_trivially_move_constructible<T>{};
+        constexpr bool is_trivially_move_constructible =
+            ::std::is_trivially_move_constructible<T>{};
         /// returns true if type T is trivially assignable.
         template <class T, class U>
         constexpr bool is_trivially_assignable = ::std::is_trivially_assignable<T, U>{};
@@ -491,13 +490,13 @@ namespace azuik
         {
         };
 
-        using int8_t = ::std::int8_t;
-        using uint8_t = ::std::uint8_t;
-        using int16_t = ::std::int16_t;
+        using int8_t   = ::std::int8_t;
+        using uint8_t  = ::std::uint8_t;
+        using int16_t  = ::std::int16_t;
         using uint16_t = ::std::uint16_t;
-        using int32_t = ::std::int32_t;
+        using int32_t  = ::std::int32_t;
         using uint32_t = ::std::uint32_t;
-        using int64_t = ::std::int64_t;
+        using int64_t  = ::std::int64_t;
         using uint64_t = ::std::uint64_t;
 
         template <int8_t x>
@@ -522,15 +521,15 @@ namespace azuik
     namespace core
     {
         template <class T, class U>
-        using assignment_expression = decltype(std::declval<T &>() = std::declval<U &>());
+        using assignment_expression = decltype(std::declval<T&>() = std::declval<U&>());
         template <class T, class I>
-        using index_expression = decltype(std::declval<T &>()[std::declval<I>()]);
+        using index_expression = decltype(std::declval<T&>()[std::declval<I>()]);
         template <class T>
-        using prefix_increment_expression = decltype(++std::declval<T &>());
+        using prefix_increment_expression = decltype(++std::declval<T&>());
         template <class T>
-        using prefix_decrement_expression = decltype(--std::declval<T &>());
+        using prefix_decrement_expression = decltype(--std::declval<T&>());
         template <class T>
-        using postfix_increment_expression = decltype(std::declval<T &>()++);
+        using postfix_increment_expression = decltype(std::declval<T&>()++);
 
         template <class T>
         constexpr bool is_prefix_incrementable = exists<prefix_increment_expression, T>;
@@ -556,7 +555,7 @@ namespace azuik
         {
         };
         template <class T>
-        struct value_type_t<T *> : identity<T>
+        struct value_type_t<T*> : identity<T>
         {
         };
 
@@ -568,7 +567,7 @@ namespace azuik
         {
         };
         template <class T>
-        struct size_type_t<T *> : identity<size_t>
+        struct size_type_t<T*> : identity<size_t>
         {
         };
 
@@ -580,7 +579,7 @@ namespace azuik
         {
         };
         template <class T>
-        struct difference_type_t<T *> : identity<ptrdiff_t>
+        struct difference_type_t<T*> : identity<ptrdiff_t>
         {
         };
 
@@ -592,7 +591,7 @@ namespace azuik
         {
         };
         template <class T>
-        struct pointer_t<T *> : identity<T *>
+        struct pointer_t<T*> : identity<T*>
         {
         };
 
@@ -604,7 +603,7 @@ namespace azuik
         {
         };
         template <class T>
-        struct reference_t<T *> : identity<T &>
+        struct reference_t<T*> : identity<T&>
         {
         };
 
@@ -616,7 +615,7 @@ namespace azuik
         {
         };
         template <class T>
-        struct const_reference_t<T *> : identity<add_const<T> &>
+        struct const_reference_t<T*> : identity<add_const<T>&>
         {
         };
 
@@ -628,7 +627,7 @@ namespace azuik
         {
         };
         template <class T>
-        struct const_pointer_t<T *> : identity<add_const<T> *>
+        struct const_pointer_t<T*> : identity<add_const<T>*>
         {
         };
         template <class T>
@@ -637,7 +636,8 @@ namespace azuik
     namespace mpl
     {
         template <class I>
-        constexpr bool is_power2 = core::bool_c<((I::value != 0) && !(I::value & (I::value - 1)))>{};
+        constexpr bool is_power2 =
+            core::bool_c<((I::value != 0) && !(I::value & (I::value - 1)))>{};
     }
     namespace core
     {
@@ -684,28 +684,26 @@ namespace azuik
         }
     } // namespace core
 } // namespace azuik
-#define AZUIK_SLOT(name)                                                                                               \
-    struct name##_fn                                                                                                   \
-    {                                                                                                                  \
-        template <class T, class... Args>                                                                              \
-        auto operator()(T &x, Args &&... args) const                                                                   \
-        {                                                                                                              \
-            return x.name(static_cast<Args &&>(args)...);                                                              \
-        }                                                                                                              \
-    } constexpr name                                                                                                   \
-    {                                                                                                                  \
-    }
+#define AZUIK_SLOT(name)                                                                           \
+    struct name##_fn                                                                               \
+    {                                                                                              \
+        template <class T, class... Args>                                                          \
+        auto operator()(T& x, Args&&... args) const                                                \
+        {                                                                                          \
+            return x.name(static_cast<Args&&>(args)...);                                           \
+        }                                                                                          \
+    } constexpr name {}
 
-#define AZUIK_HAS_NESTED_TYPE(NAME)                                                                                    \
-    template <class T, class E = ::azuik::core::defaulted>                                                             \
-    struct has_type_##NAME##_c : ::azuik::core::false_c                                                                \
-    {                                                                                                                  \
-    };                                                                                                                 \
-    template <class T>                                                                                                 \
-    struct has_type_##NAME##_c<T, ::azuik::core::when<typename T::NAME>> : ::azuik::core::true_c                       \
-    {                                                                                                                  \
-    };                                                                                                                 \
-    template <class T>                                                                                                 \
+#define AZUIK_HAS_NESTED_TYPE(NAME)                                                                \
+    template <class T, class E = ::azuik::core::defaulted>                                         \
+    struct has_type_##NAME##_c : ::azuik::core::false_c                                            \
+    {                                                                                              \
+    };                                                                                             \
+    template <class T>                                                                             \
+    struct has_type_##NAME##_c<T, ::azuik::core::when<typename T::NAME>> : ::azuik::core::true_c   \
+    {                                                                                              \
+    };                                                                                             \
+    template <class T>                                                                             \
     constexpr bool has_type_##NAME = has_type_##NAME##_c<T>::value
 
 #endif
