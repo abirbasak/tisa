@@ -7,7 +7,7 @@ namespace azuik
     namespace core
     {
         // a few named types
-        using byte  = unsigned char;
+        using byte = unsigned char;
         using sbyte = signed char;
 
         using sshort = signed short; // same as short
@@ -19,13 +19,13 @@ namespace azuik
         using slong = signed long; // same as long
         using ulong = unsigned long;
 
-        using llong  = long long;
+        using llong = long long;
         using sllong = signed long long; // same as long long
         using ullong = unsigned long long;
 
         using ldouble = long double;
 
-        using size_t    = ::std::size_t;
+        using size_t = ::std::size_t;
         using ptrdiff_t = ::std::ptrdiff_t;
     } // namespace core
 
@@ -34,15 +34,13 @@ namespace azuik
     {
         /// identity element
         template <class T>
-        struct identity
-        {
+        struct identity {
             using type = T;
         };
 
         /// returns nested type if T
         template <class T>
-        struct nested_type
-        {
+        struct nested_type {
             using type = typename T::type;
         };
 
@@ -57,23 +55,21 @@ namespace azuik
     namespace core
     {
         /// a void meta type.
-        struct void_c
-        {
+        struct void_c {
             using type = void_c;
         };
         using nonesuch = void_c;
 
         template <class I, I x>
-        struct integral_constant
-        {
-            using type                    = integral_constant;
-            using value_type              = I;
+        struct integral_constant {
+            using type = integral_constant;
+            using value_type = I;
             static value_type const value = x;
         };
 
         template <bool x>
-        using bool_c  = integral_constant<bool, x>;
-        using true_c  = bool_c<true>;
+        using bool_c = integral_constant<bool, x>;
+        using true_c = bool_c<true>;
         using false_c = bool_c<false>;
 
         template <byte x>
@@ -116,20 +112,22 @@ namespace azuik
         struct overloaded;
 
         template <class F, class... Fs>
-        struct overloaded<F, Fs...> : F, overloaded<Fs...>
-        {
-            explicit overloaded(F&& f, Fs&&... fs) : F{f}, Fs{fs}... {}
-            using F::                operator();
+        struct overloaded<F, Fs...> : F, overloaded<Fs...> {
+            explicit overloaded(F&& f, Fs&&... fs)
+                : F{f}
+                , Fs{fs}...
+            {}
+            using F::operator();
             using overloaded<Fs...>::operator();
         };
         template <class F>
-        struct overloaded<F> : F
-        {
-            explicit overloaded(F&& f) : F{f} {}
+        struct overloaded<F> : F {
+            explicit overloaded(F&& f)
+                : F{f}
+            {}
         };
 
-        struct overload_fn
-        {
+        struct overload_fn {
             template <class... Fs>
             overloaded<Fs...> operator()(Fs&&... fs) const
             {
@@ -141,39 +139,29 @@ namespace azuik
     namespace core
     {
         template <class... T>
-        struct type_list
-        {
-        };
+        struct type_list {};
         template <class T, T... x>
-        struct value_list
-        {
-        };
+        struct value_list {};
         template <size_t... x>
         using index_list = value_list<size_t, x...>;
 
         template <class L, template <class...> class TPL>
         struct rebind_fn;
         template <template <class...> class L, template <class...> class TPL, class... Args>
-        struct rebind_fn<L<Args...>, TPL> : identity<TPL<Args...>>
-        {
-        };
+        struct rebind_fn<L<Args...>, TPL> : identity<TPL<Args...>> {};
         template <class L, template <class...> class TPL>
         using rebind = alias<rebind_fn<L, TPL>>;
 
         template <class L>
         struct count_of;
         template <template <class...> class TMP, class... Args>
-        struct count_of<TMP<Args...>> : size_c<sizeof...(Args)>
-        {
-        };
+        struct count_of<TMP<Args...>> : size_c<sizeof...(Args)> {};
 
         template <class L, template <class...> class F>
         struct transform_fn;
 
         template <template <class...> class L, template <class...> class F, class... Args>
-        struct transform_fn<L<Args...>, F> : identity<L<F<Args>...>>
-        {
-        };
+        struct transform_fn<L<Args...>, F> : identity<L<F<Args>...>> {};
 
         template <class L, template <class...> class F>
         using transform = alias<transform_fn<L, F>>;
@@ -181,25 +169,17 @@ namespace azuik
     namespace core
     {
         template <bool C, class E = defaulted>
-        struct Enable_if
-        {
-        };
+        struct Enable_if {};
         template <class E>
-        struct Enable_if<true, E> : identity<E>
-        {
-        };
+        struct Enable_if<true, E> : identity<E> {};
 
         template <bool C, class E = defaulted>
         using enable_if = alias<Enable_if<C, E>>;
 
         template <bool C, class E = defaulted>
-        struct Disable_if
-        {
-        };
+        struct Disable_if {};
         template <class E>
-        struct Disable_if<false, E> : identity<E>
-        {
-        };
+        struct Disable_if<false, E> : identity<E> {};
 
         template <bool C, class E = defaulted>
         using disable_if = alias<Disable_if<C, E>>;
@@ -213,13 +193,11 @@ namespace azuik
         namespace impl
         {
             template <class Default, class Enable, template <class...> class Expr, class... Args>
-            struct detector : false_c
-            {
+            struct detector : false_c {
                 using detected_type = Default;
             };
             template <class Default, template <class...> class Expr, class... Args>
-            struct detector<Default, when<Expr<Args...>>, Expr, Args...> : true_c
-            {
+            struct detector<Default, when<Expr<Args...>>, Expr, Args...> : true_c {
                 using detected_type = Expr<Args...>;
             };
         } // namespace impl
@@ -260,17 +238,11 @@ namespace azuik
     namespace core
     {
         template <bool C, class T, class F>
-        struct Cond_c : identity<T>
-        {
-        };
+        struct Cond_c : identity<T> {};
         template <class T, class F>
-        struct Cond_c<false, T, F> : identity<F>
-        {
-        };
+        struct Cond_c<false, T, F> : identity<F> {};
         template <class C, class T, class F>
-        struct Cond : Cond_c<C::value, T, F>
-        {
-        };
+        struct Cond : Cond_c<C::value, T, F> {};
 
         template <bool C, class T, class F>
         using cond_c = alias<Cond_c<C, T, F>>;
@@ -283,73 +255,55 @@ namespace azuik
     {
         /// add const qualifier to the type.
         template <class T>
-        struct add_const_fn : ::std::add_const<T>
-        {
-        };
+        struct add_const_fn : ::std::add_const<T> {};
         template <class T>
         using add_const = alias<add_const_fn<T>>;
 
         /// remove const qualifier from the type.
         template <class T>
-        struct remove_const_fn : ::std::remove_const<T>
-        {
-        };
+        struct remove_const_fn : ::std::remove_const<T> {};
         template <class T>
         using remove_const = alias<remove_const_fn<T>>;
 
         /// add volatile qualifier to the type.
         template <class T>
-        struct add_volatile_fn : ::std::add_volatile<T>
-        {
-        };
+        struct add_volatile_fn : ::std::add_volatile<T> {};
         template <class T>
         using add_volatile = alias<add_volatile_fn<T>>;
 
         /// remove volatile qualifier from the type.
         template <class T>
-        struct remove_volatile_fn : ::std::remove_volatile<T>
-        {
-        };
+        struct remove_volatile_fn : ::std::remove_volatile<T> {};
         template <class T>
         using remove_volatile = alias<remove_volatile_fn<T>>;
 
         /// add cv qualifier to the type.
         template <class T>
-        struct add_cv_fn : ::std::add_cv<T>
-        {
-        };
+        struct add_cv_fn : ::std::add_cv<T> {};
         template <class T>
         using add_cv = alias<add_cv_fn<T>>;
 
         /// remove cv qualifier from the type.
         template <class T>
-        struct remove_cv_fn : ::std::remove_cv<T>
-        {
-        };
+        struct remove_cv_fn : ::std::remove_cv<T> {};
         template <class T>
         using remove_cv = alias<remove_cv_fn<T>>;
 
         /// add lvalue reference to the type.
         template <class T>
-        struct add_lv_ref_fn : bool_c<::std::add_lvalue_reference<T>::value>
-        {
-        };
+        struct add_lv_ref_fn : bool_c<::std::add_lvalue_reference<T>::value> {};
         template <class T>
         using add_lv_ref = alias<add_lv_ref_fn<T>>;
 
         /// add rvalue reference to the type.
         template <class T>
-        struct add_rv_ref_fn : bool_c<::std::add_rvalue_reference<T>::value>
-        {
-        };
+        struct add_rv_ref_fn : bool_c<::std::add_rvalue_reference<T>::value> {};
         template <class T>
         using add_rv_ref = alias<add_rv_ref_fn<T>>;
 
         /// remove any reference from the type.
         template <class T>
-        struct remove_ref_fn : ::std::remove_reference<T>
-        {
-        };
+        struct remove_ref_fn : ::std::remove_reference<T> {};
         template <class T>
         using remove_ref = alias<remove_ref_fn<T>>;
 
@@ -456,9 +410,7 @@ namespace azuik
         using size_of = size_c<sizeof(T)>;
 
         template <class T>
-        struct alignment_of : bool_c<::std::alignment_of<T>::value>
-        {
-        };
+        struct alignment_of : bool_c<::std::alignment_of<T>::value> {};
 
         template <size_t N, size_t A>
         using aligned_storage = alias<::std::aligned_storage<N, A>>;
@@ -467,36 +419,26 @@ namespace azuik
         using auto_storage = aligned_storage<N * size_of<T>::value, std::alignment_of<T>::value>;
 
         template <class T>
-        struct count_of : size_c<1>
-        {
-        };
+        struct count_of : size_c<1> {};
         template <class... T>
-        struct count_of<type_list<T...>> : size_c<sizeof...(T)>
-        {
-        };
+        struct count_of<type_list<T...>> : size_c<sizeof...(T)> {};
         template <class T, T... x>
-        struct count_of<value_list<T, x...>> : size_c<sizeof...(x)>
-        {
-        };
+        struct count_of<value_list<T, x...>> : size_c<sizeof...(x)> {};
 
         template <template <class> class Pr, class... T>
         struct any_of;
         template <template <class> class Pr, class T>
-        struct any_of<Pr, T> : Pr<T>
-        {
-        };
+        struct any_of<Pr, T> : Pr<T> {};
         template <template <class> class Pr, class F, class... R>
-        struct any_of<Pr, F, R...> : bool_c<(Pr<F>::value || any_of<Pr, R...>::value)>
-        {
-        };
+        struct any_of<Pr, F, R...> : bool_c<(Pr<F>::value || any_of<Pr, R...>::value)> {};
 
-        using int8_t   = ::std::int8_t;
-        using uint8_t  = ::std::uint8_t;
-        using int16_t  = ::std::int16_t;
+        using int8_t = ::std::int8_t;
+        using uint8_t = ::std::uint8_t;
+        using int16_t = ::std::int16_t;
         using uint16_t = ::std::uint16_t;
-        using int32_t  = ::std::int32_t;
+        using int32_t = ::std::int32_t;
         using uint32_t = ::std::uint32_t;
-        using int64_t  = ::std::int64_t;
+        using int64_t = ::std::int64_t;
         using uint64_t = ::std::uint64_t;
 
         template <int8_t x>
@@ -544,92 +486,62 @@ namespace azuik
     namespace core
     {
         template <class S>
-        struct allocator_type_t : identity<typename S::allocator_type>
-        {
-        };
+        struct allocator_type_t : identity<typename S::allocator_type> {};
         template <class S>
         using allocator_type = alias<allocator_type_t<S>>;
 
         template <class T>
-        struct value_type_t : identity<typename T::value_type>
-        {
-        };
+        struct value_type_t : identity<typename T::value_type> {};
         template <class T>
-        struct value_type_t<T*> : identity<T>
-        {
-        };
+        struct value_type_t<T*> : identity<T> {};
 
         template <class T>
         using value_type = alias<value_type_t<T>>;
 
         template <class T>
-        struct size_type_t : identity<typename T::size_type>
-        {
-        };
+        struct size_type_t : identity<typename T::size_type> {};
         template <class T>
-        struct size_type_t<T*> : identity<size_t>
-        {
-        };
+        struct size_type_t<T*> : identity<size_t> {};
 
         template <class T>
         using size_type = alias<size_type_t<T>>;
 
         template <class T>
-        struct difference_type_t : identity<typename T::difference_type>
-        {
-        };
+        struct difference_type_t : identity<typename T::difference_type> {};
         template <class T>
-        struct difference_type_t<T*> : identity<ptrdiff_t>
-        {
-        };
+        struct difference_type_t<T*> : identity<ptrdiff_t> {};
 
         template <class T>
         using difference_type = alias<difference_type_t<T>>;
 
         template <class T>
-        struct pointer_t : identity<typename T::pointer>
-        {
-        };
+        struct pointer_t : identity<typename T::pointer> {};
         template <class T>
-        struct pointer_t<T*> : identity<T*>
-        {
-        };
+        struct pointer_t<T*> : identity<T*> {};
 
         template <class T>
         using pointer = alias<pointer_t<T>>;
 
         template <class T>
-        struct reference_t : identity<typename T::reference>
-        {
-        };
+        struct reference_t : identity<typename T::reference> {};
         template <class T>
-        struct reference_t<T*> : identity<T&>
-        {
-        };
+        struct reference_t<T*> : identity<T&> {};
 
         template <class T>
         using reference = alias<reference_t<T>>;
 
         template <class T>
-        struct const_reference_t : identity<typename T::const_reference>
-        {
-        };
+        struct const_reference_t : identity<typename T::const_reference> {};
         template <class T>
-        struct const_reference_t<T*> : identity<add_const<T>&>
-        {
-        };
+        struct const_reference_t<T*> : identity<add_const<T>&> {};
 
         template <class T>
         using const_reference = alias<const_reference_t<T>>;
 
         template <class T>
-        struct const_pointer_t : identity<typename T::const_pointer>
-        {
-        };
+        struct const_pointer_t : identity<typename T::const_pointer> {};
         template <class T>
-        struct const_pointer_t<T*> : identity<add_const<T>*>
-        {
-        };
+        struct const_pointer_t<T*> : identity<add_const<T>*> {};
         template <class T>
         using const_pointer = alias<const_pointer_t<T>>;
     } // namespace core
@@ -644,30 +556,18 @@ namespace azuik
         template <class T>
         struct as_float_t;
         template <>
-        struct as_float_t<float> : identity<float>
-        {
-        };
+        struct as_float_t<float> : identity<float> {};
         template <>
-        struct as_float_t<double> : identity<double>
-        {
-        };
+        struct as_float_t<double> : identity<double> {};
         template <>
-        struct as_float_t<ldouble> : identity<ldouble>
-        {
-        };
+        struct as_float_t<ldouble> : identity<ldouble> {};
 
         template <>
-        struct as_float_t<int> : identity<double>
-        {
-        };
+        struct as_float_t<int> : identity<double> {};
         template <>
-        struct as_float_t<long> : identity<double>
-        {
-        };
+        struct as_float_t<long> : identity<double> {};
         template <>
-        struct as_float_t<llong> : identity<ldouble>
-        {
-        };
+        struct as_float_t<llong> : identity<ldouble> {};
 
         template <class T>
         using as_float = alias<as_float_t<T>>;
@@ -684,26 +584,22 @@ namespace azuik
         }
     } // namespace core
 } // namespace azuik
-#define AZUIK_SLOT(name)                                                                           \
-    struct name##_fn                                                                               \
-    {                                                                                              \
-        template <class T, class... Args>                                                          \
-        auto operator()(T& x, Args&&... args) const                                                \
-        {                                                                                          \
-            return x.name(static_cast<Args&&>(args)...);                                           \
-        }                                                                                          \
-    } constexpr name {}
+#    define AZUIK_SLOT(name)                                                                       \
+        struct name##_fn {                                                                         \
+            template <class T, class... Args>                                                      \
+            auto operator()(T& x, Args&&... args) const                                            \
+            {                                                                                      \
+                return x.name(static_cast<Args&&>(args)...);                                       \
+            }                                                                                      \
+        } constexpr name {}
 
-#define AZUIK_HAS_NESTED_TYPE(NAME)                                                                \
-    template <class T, class E = ::azuik::core::defaulted>                                         \
-    struct has_type_##NAME##_c : ::azuik::core::false_c                                            \
-    {                                                                                              \
-    };                                                                                             \
-    template <class T>                                                                             \
-    struct has_type_##NAME##_c<T, ::azuik::core::when<typename T::NAME>> : ::azuik::core::true_c   \
-    {                                                                                              \
-    };                                                                                             \
-    template <class T>                                                                             \
-    constexpr bool has_type_##NAME = has_type_##NAME##_c<T>::value
+#    define AZUIK_HAS_NESTED_TYPE(NAME)                                                            \
+        template <class T, class E = ::azuik::core::defaulted>                                     \
+        struct has_type_##NAME##_c : ::azuik::core::false_c {};                                    \
+        template <class T>                                                                         \
+        struct has_type_##NAME##_c<T, ::azuik::core::when<typename T::NAME>>                       \
+            : ::azuik::core::true_c {};                                                            \
+        template <class T>                                                                         \
+        constexpr bool has_type_##NAME = has_type_##NAME##_c<T>::value
 
 #endif
