@@ -581,21 +581,11 @@ namespace azuik
         using as_float = alias<as_float_t<T>>;
     } // namespace core
 } // namespace azuik
-namespace azuik
-{
-    namespace core
-    {
-        template <class CharT, CharT... x>
-        auto operator""_kw() -> value_list<CharT, sizeof...(x)>
-        {
-            return {x...};
-        }
-    } // namespace core
-} // namespace azuik
+
 #    define AZUIK_SLOT(name)                                                                       \
         struct name##_fn {                                                                         \
             template <class T, class... Args>                                                      \
-            auto operator()(T& x, Args&&... args) const                                            \
+            constexpr auto operator()(T& x, Args&&... args) const                                  \
             {                                                                                      \
                 return x.name(static_cast<Args&&>(args)...);                                       \
             }                                                                                      \
