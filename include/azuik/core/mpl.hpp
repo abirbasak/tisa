@@ -312,6 +312,7 @@ namespace azuik
 
         template <class T, class U>
         constexpr bool is_convertible = ::std::is_convertible<T, U>{};
+
         /// returns true if type T is constructible for Args
         template <class T, class... Args>
         constexpr bool is_constructible = ::std::is_constructible<T, Args...>{};
@@ -406,6 +407,12 @@ namespace azuik
         template <class T>
         constexpr bool is_floating_point = ::std::is_floating_point<T>{};
 
+        template <class T, class = enable_if<is_integral<T>>>
+        using Integral = T;
+
+        template <class T, class = enable_if<is_floating_point<T>>>
+        using Floating_point = T;
+
         template <class T>
         using size_of = size_c<sizeof(T)>;
 
@@ -480,6 +487,7 @@ namespace azuik
         using prefix_increment = decltype(++std::declval<T>());
         template <class T>
         using dereference = decltype(*std::declval<T>());
+
     } // namespace core
 
     // value_type traits
