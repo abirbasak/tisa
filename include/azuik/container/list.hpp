@@ -189,7 +189,7 @@ namespace azuik
             template <class S>
             class bidirectional_iterator {};
         } // namespace detail_
-        template <class T, class A>
+        template <class T, class A = allocator>
         class list {
         public:
             using self_type = list;
@@ -208,7 +208,26 @@ namespace azuik
             struct empty_node {};
 
         public:
-            constexpr auto begin() noexcept {}
+            constexpr auto empty() const noexcept
+            {
+                return m_head.next == &m_head;
+            }
+            constexpr auto begin() noexcept
+            {
+                return iterator{*this, m_head.next};
+            }
+            constexpr auto end() noexcept
+            {
+                return iterator{*this, m_head};
+            }
+            constexpr auto begin() const noexcept
+            {
+                return const_iterator{*this, m_head.next};
+            }
+            constexpr auto end() const noexcept
+            {
+                return const_iterator{*this, m_head.next};
+            }
 
         private:
             empty_node m_head;
