@@ -13,24 +13,6 @@ namespace azuik
         struct random_access_tag {};
         struct contiguous_tag {};
 
-        //iterable type traits
-        namespace detail
-        {
-            template <class S>
-            struct iterator_t : identity<typename S::iterator> {};
-            template <class S>
-            struct iterator_t<S const> : identity<typename S::const_iterator> {};
-        } // namespace detail
-        template <class S>
-        struct const_iterator_t : identity<typename remove_ref<S>::const_iterator> {};
-        template <class S>
-        using const_iterator = alias<const_iterator_t<S>>;
-
-        template <class S>
-        struct iterator_t : detail::iterator_t<remove_ref<S>> {};
-        template <class S>
-        using iterator = alias<iterator_t<S>>;
-
         template <class Fn>
         class iterable {};
 
