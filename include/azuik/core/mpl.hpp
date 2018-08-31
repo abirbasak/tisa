@@ -253,6 +253,37 @@ namespace azuik
 
     namespace core
     {
+        template <class T>
+        using is_array = alias<::std::is_array<T>>;
+        template <class T>
+        using is_enum = alias<::std::is_enum<T>>;
+        template <class T>
+        using is_class = alias<::std::is_class<T>>;
+        template <class T>
+        using is_union = alias<::std::is_union<T>>;
+        template <class T>
+        using is_function = alias<::std::is_function<T>>;
+        template <class T>
+        using is_ptr = alias<::std::is_pointer<T>>;
+
+        template <class T>
+        using is_member_object_ptr = alias<::std::is_member_object_pointer<T>>;
+        template <class T>
+        using is_member_function_ptr = alias<::std::is_member_function_pointer<T>>;
+        template <class T>
+        using is_member_ptr = alias<::std::is_member_pointer<T>>;
+
+        template <class T>
+        using is_lvref = alias<::std::is_lvalue_reference<T>>;
+        template <class T>
+        using is_rvref = alias<::std::is_rvalue_reference<T>>;
+        template <class T>
+        using is_ref = alias<::std::is_reference<T>>;
+
+    } // namespace core
+
+    namespace core
+    {
         /// add const qualifier to the type.
         template <class T>
         struct add_const_fn : ::std::add_const<T> {};
@@ -407,6 +438,15 @@ namespace azuik
         template <class T>
         constexpr bool is_floating_point = ::std::is_floating_point<T>{};
 
+        template <class F, class... Args>
+        struct is_invocable {
+            template <class U>
+            static auto test(U* p) -> decltype((*p)(std::declval<Args>()...), void(), true_c{});
+            template <class U>
+            static auto test(...) -> decltype(false_c{});
+            static constexpr bool value = decltype(test<F>(0))::value;
+        };
+
         template <class T, class = enable_if<is_integral<T>>>
         using Integral = T;
 
@@ -469,6 +509,9 @@ namespace azuik
 
     namespace core
     {
+        template <class Pr, class T>
+        using is_unary_predicate = is_invocable<Pr, T>;
+
         template <class T, class U>
         using assignment_expression = decltype(std::declval<T&>() = std::declval<U&>());
         template <class T, class I>
