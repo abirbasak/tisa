@@ -7,36 +7,6 @@ namespace azuik
 {
     namespace core
     {
-        template <class T, class A>
-        struct allocator_value_t : identity<T> {};
-        template <class T, class A>
-        struct allocator_size_t : identity<size_t> {};
-        template <class T, class A>
-        struct allocator_difference_t : identity<ptrdiff_t> {};
-
-        template <class T, class A>
-        struct allocator_reference_t : identity<T&> {};
-        template <class T, class A>
-        struct allocator_pointer_t : identity<T*> {};
-        template <class T, class A>
-        struct allocator_const_reference_t : identity<T const&> {};
-        template <class T, class A>
-        struct allocator_const_pointer_t : identity<T const*> {};
-        template <class T, class A>
-        using allocator_value = alias<allocator_value_t<T, A>>;
-        template <class T, class A>
-        using allocator_size = alias<allocator_size_t<T, A>>;
-        template <class T, class A>
-        using allocator_difference = alias<allocator_difference_t<T, A>>;
-        template <class T, class A>
-        using allocator_reference = alias<allocator_reference_t<T, A>>;
-        template <class T, class A>
-        using allocator_pointer = alias<allocator_pointer_t<T, A>>;
-        template <class T, class A>
-        using allocator_const_reference = alias<allocator_const_reference_t<T, A>>;
-        template <class T, class A>
-        using allocator_const_pointer = alias<allocator_const_pointer_t<T, A>>;
-
         struct for_each_iter_fn {
             template <class InIter, class Fn>
             void operator()(InIter f, InIter l, Fn fn) const noexcept
