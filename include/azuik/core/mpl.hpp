@@ -494,64 +494,54 @@ namespace azuik
     namespace core
     {
         template <class S>
-        struct allocator_type_t : identity<typename S::allocator_type> {};
+        struct iterable_traits;
+
+        template <class T>
+        struct iterable_traits<T*> {
+            using value_type = remove_const<T>;
+            using size_type = size_t;
+            using difference_type = ptrdiff_t;
+            using reference = T&;
+            using const_reference = add_const<T>&;
+            using pointer = T*;
+            using add_pointer = add_const<T>*;
+            using iterator = T*;
+            using const_iterator = add_const<T>*;
+        };
+
         template <class S>
-        using allocator_type = alias<allocator_type_t<S>>;
+        struct sequence_traits;
 
-        template <class T>
-        struct value_type_t : identity<typename T::value_type> {};
-        template <class T>
-        struct value_type_t<T*> : identity<T> {};
+        template <class S>
+        using allocator_type = typename sequence_traits<S>::allocator_type;
 
-        template <class T>
-        using value_type = alias<value_type_t<T>>;
+        template <class I>
+        using value_type = typename iterable_traits<I>::value_type;
 
-        template <class T>
-        struct size_type_t : identity<typename T::size_type> {};
-        template <class T>
-        struct size_type_t<T*> : identity<size_t> {};
+        template <class I>
+        using size_type = typename iterable_traits<I>::size_type;
 
-        template <class T>
-        using size_type = alias<size_type_t<T>>;
+        template <class I>
+        using difference_type = typename iterable_traits<I>::difference_type;
 
-        template <class T>
-        struct difference_type_t : identity<typename T::difference_type> {};
-        template <class T>
-        struct difference_type_t<T*> : identity<ptrdiff_t> {};
+        template <class I>
+        using pointer = typename iterable_traits<I>::pointer;
 
-        template <class T>
-        using difference_type = alias<difference_type_t<T>>;
+        template <class I>
+        using reference = typename iterable_traits<I>::reference;
 
-        template <class T>
-        struct pointer_t : identity<typename T::pointer> {};
-        template <class T>
-        struct pointer_t<T*> : identity<T*> {};
+        template <class I>
+        using const_pointer = typename iterable_traits<I>::const_pointer;
 
-        template <class T>
-        using pointer = alias<pointer_t<T>>;
+        template <class I>
+        using const_reference = typename iterable_traits<I>::const_reference;
 
-        template <class T>
-        struct reference_t : identity<typename T::reference> {};
-        template <class T>
-        struct reference_t<T*> : identity<T&> {};
+        template <class I>
+        using iterator = typename iterable_traits<I>::iterator;
 
-        template <class T>
-        using reference = alias<reference_t<T>>;
+        template <class I>
+        using const_iterator = typename iterable_traits<I>::const_iterator;
 
-        template <class T>
-        struct const_reference_t : identity<typename T::const_reference> {};
-        template <class T>
-        struct const_reference_t<T*> : identity<add_const<T>&> {};
-
-        template <class T>
-        using const_reference = alias<const_reference_t<T>>;
-
-        template <class T>
-        struct const_pointer_t : identity<typename T::const_pointer> {};
-        template <class T>
-        struct const_pointer_t<T*> : identity<add_const<T>*> {};
-        template <class T>
-        using const_pointer = alias<const_pointer_t<T>>;
     } // namespace core
     namespace mpl
     {
