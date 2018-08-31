@@ -40,6 +40,31 @@ namespace azuik
     };                                                                                             \
     inline constexpr NAME##_fn NAME
 
+#define AZUIK_ALGORITHM_SEQ(NAME, STD_NAME)                                                        \
+    struct NAME##_fn {                                                                             \
+        template <class View1, class Iter2>                                                        \
+        auto constexpr operator()(View1&& v1, Iter2 first) const noexcept                          \
+        {                                                                                          \
+            return ::std::STD_NAME(begin(v1), end(v1), first);                                     \
+        }                                                                                          \
+        template <class View1, class View2>                                                        \
+        auto constexpr operator()(View1&& v1, View2&& v2) const noexcept                           \
+        {                                                                                          \
+            return ::std::STD_NAME(begin(v1), end(v1), begin(v2), end(v2));                        \
+        }                                                                                          \
+        template <class View1, class Iter2, class BiPred>                                          \
+        auto constexpr operator()(View1&& v1, Iter2 first, BiPred p) const noexcept                \
+        {                                                                                          \
+            return ::std::STD_NAME(begin(v1), end(v1), first, p);                                  \
+        }                                                                                          \
+        template <class View1, class View2, class BiPred>                                          \
+        auto constexpr operator()(View1&& v1, View2&& v2, BiPred p) const noexcept                 \
+        {                                                                                          \
+            return ::std::STD_NAME(begin(v1), end(v1), begin(v2), end(v2), p);                     \
+        }                                                                                          \
+    };                                                                                             \
+    inline constexpr NAME##_fn NAME
+
         AZUIK_ALGORITHM_PRED(all_of, all_of);
         AZUIK_ALGORITHM_PRED(none_of, none_of);
         AZUIK_ALGORITHM_PRED(any_of, any_of);
@@ -74,6 +99,12 @@ namespace azuik
         AZUIK_ALGORITHM_BIPRED(push_heap, push_heap);
         AZUIK_ALGORITHM_BIPRED(pop_heap, pop_heap);
         AZUIK_ALGORITHM_BIPRED(sort_heap, sort_heap);
+
+        // rank
+        AZUIK_ALGORITHM_BIPRED(min_element, min_element);
+        AZUIK_ALGORITHM_BIPRED(max_element, max_element);
+        AZUIK_ALGORITHM_BIPRED(minmax_element, minmax_element);
+        AZUIK_ALGORITHM_SEQ(lexicographical_compare, lexicographical_compare);
 
     } // namespace core
 } // namespace azuik
