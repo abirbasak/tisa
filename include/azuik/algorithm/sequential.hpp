@@ -67,6 +67,14 @@ namespace azuik
         // AZUIK_ALGORITHM_BPRED(partial_sort, partial_sort);
         // AZUIK_ALGORITHM_BPRED(partial_sort_copy, partial_sort_copy);
 
+        // heap
+        AZUIK_ALGORITHM_BIPRED(is_heap, is_heap);
+        AZUIK_ALGORITHM_BIPRED(is_heap_until, is_heap_until);
+        AZUIK_ALGORITHM_BIPRED(make_heap, make_heap);
+        AZUIK_ALGORITHM_BIPRED(push_heap, push_heap);
+        AZUIK_ALGORITHM_BIPRED(pop_heap, pop_heap);
+        AZUIK_ALGORITHM_BIPRED(sort_heap, sort_heap);
+
     } // namespace core
 } // namespace azuik
 #endif
