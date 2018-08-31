@@ -472,12 +472,12 @@ namespace azuik
         template <class T, T... x>
         struct count_of<value_list<T, x...>> : size_c<sizeof...(x)> {};
 
-        template <template <class> class Pr, class... T>
-        struct any_of;
-        template <template <class> class Pr, class T>
-        struct any_of<Pr, T> : Pr<T> {};
-        template <template <class> class Pr, class F, class... R>
-        struct any_of<Pr, F, R...> : bool_c<(Pr<F>::value || any_of<Pr, R...>::value)> {};
+        //template <template <class> class Pr, class... T>
+        //struct any_of;
+        //template <template <class> class Pr, class T>
+        //struct any_of<Pr, T> : Pr<T> {};
+        //template <template <class> class Pr, class F, class... R>
+        //struct any_of<Pr, F, R...> : bool_c<(Pr<F>::value || any_of<Pr, R...>::value)> {};
 
         using int8_t = ::std::int8_t;
         using uint8_t = ::std::uint8_t;
@@ -537,7 +537,19 @@ namespace azuik
     namespace core
     {
         template <class S>
-        struct iterable_traits;
+        struct iterable_traits {
+            using value_type = typename S::value_type;
+            using size_type = typename S::size_type;
+            using difference_type = typename S::difference_type;
+            using reference = typename S::reference;
+            using pointer = typename S::pointer;
+            using const_reference = typename S::const_reference;
+            using const_pointer = typename S::const_pointer;
+        };
+        template <class S>
+        struct iterable_traits<S&> : iterable_traits<S> {};
+        template <class S>
+        struct iterable_traits<S&&> : iterable_traits<S> {};
 
         template <class T>
         struct iterable_traits<T*> {
