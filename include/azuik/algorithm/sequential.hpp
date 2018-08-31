@@ -106,6 +106,11 @@ namespace azuik
         AZUIK_ALGORITHM_BIPRED(minmax_element, minmax_element);
         AZUIK_ALGORITHM_SEQ(lexicographical_compare, lexicographical_compare);
 
+        // permutations
+        AZUIK_ALGORITHM_SEQ(is_permutation, is_permutation);
+        AZUIK_ALGORITHM_BIPRED(next_permutation, next_permutation);
+        AZUIK_ALGORITHM_BIPRED(prev_permutation, prev_permutation);
+
     } // namespace core
 } // namespace azuik
 #endif
