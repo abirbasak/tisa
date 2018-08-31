@@ -79,30 +79,35 @@ namespace azuik
         class list;
 
         template <class T, class A>
-        struct allocator_type_t<list<T, A>> : identity<A> {};
-        template <class T, class A>
-        struct value_type_t<list<T, A>> : allocator_value_t<T, A> {};
-        template <class T, class A>
-        struct size_type_t<list<T, A>> : allocator_size_t<T, A> {};
-        template <class T, class A>
-        struct difference_type_t<list<T, A>> : allocator_difference_t<T, A> {};
-        template <class T, class A>
-        struct reference_t<list<T, A>> : allocator_reference<T, A> {};
-        template <class T, class A>
-        struct const_reference_t<list<T, A>> : allocator_const_reference_t<T, A> {};
-        template <class T, class A>
-        struct pointer_t<list<T, A>> : allocator_pointer_t<T, A> {};
-        template <class T, class A>
-        struct const_pointer_t<list<T, A>> : allocator_const_pointer_t<T, A> {};
+        struct iterable_traits<list<T, A>> : iterable_traits_from_allocator<T, A> {
+            using iterator = bidirectional_iterator<list<T, A>>;
+            using const_iterator = bidirectional_iterator<list<T, A> const>;
+        };
 
         template <class T, class A>
-        struct iterator_t<list<T, A>> : identity<bidirectional_iterator<list<T, A>>> {};
+        struct sequence_traits<list<T, A>> {
+            using allocator_type = A;
+        };
 
         template <class T, class A>
         class forward_list;
 
         template <class T, class A>
+        struct iterable_traits<forward_list<T, A>> : iterable_traits_from_allocator<T, A> {};
+
+        template <class T, class A>
+        struct sequence_traits<forward_list<T, A>> {
+            using allocator_type = A;
+        };
+        template <class T, class A>
         class reversed_list;
+
+        template <class T, class A>
+        struct iterable_traits<reversed_list<T, A>> : iterable_traits_from_allocator<T, A> {};
+        template <class T, class A>
+        struct sequence_traits<reversed_list<T, A>> {
+            using allocator_type = A;
+        };
 
         template <class T, class A>
         class forward_list {
@@ -204,8 +209,15 @@ namespace azuik
             using const_iterator = core::const_iterator<self_type>;
 
         private:
-            struct node {};
-            struct empty_node {};
+            struct empty_node;
+            struct node;
+            using node_ptr = core::allocator_pointer<node, allocator_type>;
+
+        private:
+            struct empty_node {
+                node_ptr next;
+            };
+            struct node : empty_node {};
 
         public:
             constexpr auto empty() const noexcept
@@ -228,6 +240,9 @@ namespace azuik
             {
                 return const_iterator{*this, m_head.next};
             }
+            template <class... Args>
+            void push_back(Args&&... args)
+            {}
 
         private:
             empty_node m_head;
