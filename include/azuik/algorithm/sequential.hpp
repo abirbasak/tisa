@@ -30,6 +30,19 @@ namespace azuik
         AZUIK_ALGORITHM_PRED(any_of, any_of);
         AZUIK_ALGORITHM_PRED(count, count_if);
 
+        // search
+        AZUIK_ALGORITHM_PRED(find, find_if);
+        AZUIK_ALGORITHM_PRED(find_not, find_if_not);
+        AZUIK_ALGORITHM_PRED(remove, remove_if);
+
+        // partition
+        AZUIK_ALGORITHM_PRED(is_partitioned, is_partitioned);
+        //TBD: is_partitioned_until
+        AZUIK_ALGORITHM_PRED(partition, partition);
+        AZUIK_ALGORITHM_PRED(stable_partition, stable_partition);
+        AZUIK_ALGORITHM_PRED(partition_point, partition_point);
+        //TBD: partition_copy(InView,Pred,Out1,Out2)
+
     } // namespace core
 } // namespace azuik
 #endif
