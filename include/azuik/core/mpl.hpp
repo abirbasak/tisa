@@ -238,16 +238,16 @@ namespace azuik
     namespace core
     {
         template <bool C, class T, class F>
-        struct Cond_c : identity<T> {};
+        struct Cond : identity<T> {};
         template <class T, class F>
-        struct Cond_c<false, T, F> : identity<F> {};
+        struct Cond<false, T, F> : identity<F> {};
         template <class C, class T, class F>
-        struct Cond : Cond_c<C::value, T, F> {};
+        struct Cond_c : Cond<C::value, T, F> {};
 
         template <bool C, class T, class F>
-        using cond_c = alias<Cond_c<C, T, F>>;
-        template <class C, class T, class F>
         using cond = alias<Cond<C, T, F>>;
+        template <class C, class T, class F>
+        using cond_c = alias<Cond_c<C, T, F>>;
 
     } // namespace core
 
@@ -319,6 +319,16 @@ namespace azuik
         struct remove_cv_fn : ::std::remove_cv<T> {};
         template <class T>
         using remove_cv = alias<remove_cv_fn<T>>;
+
+        template <class T>
+        inline constexpr bool is_const = ::std::is_const<T>{};
+        template <class T>
+        inline constexpr bool is_volatile = ::std::is_volatile<T>{};
+
+        template <class T>
+        using flip_const = cond<is_const<T>, remove_const<T>, add_const<T>>;
+        template <class T>
+        using flip_volatile = cond<is_const<T>, remove_volatile<T>, add_volatile<T>>;
 
         /// add lvalue reference to the type.
         template <class T>
@@ -545,6 +555,8 @@ namespace azuik
             using pointer = typename S::pointer;
             using const_reference = typename S::const_reference;
             using const_pointer = typename S::const_pointer;
+            using iterator = typename S::iterator;
+            using const_iterator = typename S::const_iterator;
         };
         template <class S>
         struct iterable_traits<S&> : iterable_traits<S> {};
