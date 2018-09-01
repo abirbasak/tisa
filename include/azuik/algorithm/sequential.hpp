@@ -10,13 +10,13 @@ namespace azuik
 #define AZUIK_ALGORITHM_PRED(NAME, STD_NAME)                                                       \
     struct NAME##_fn {                                                                             \
         template <class View, class Pred,                                                          \
-                  core::enable_if<is_unary_predicate<Pred, value_type<View>>::value, int> = 0>     \
+                  core::enable_if<is_unary_predicate<Pred, value_type<View>>, int> = 0>            \
         auto constexpr operator()(View&& v, Pred p) const noexcept                                 \
         {                                                                                          \
             return ::std::STD_NAME(begin(v), end(v), p);                                           \
         }                                                                                          \
         template <class View, class T, class BiPred = equal_to_fn,                                 \
-                  core::disable_if<is_unary_predicate<T, value_type<View>>::value, int> = 0>       \
+                  core::disable_if<is_unary_predicate<T, value_type<View>>, int> = 0>              \
         auto constexpr operator()(View&& v, T const& x, BiPred pr = {}) const noexcept             \
         {                                                                                          \
             return ::std::STD_NAME(begin(v), end(v),                                               \
