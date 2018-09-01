@@ -2,7 +2,6 @@
 #define AZUIK_CONTAINER_LIST_HPP
 #include <azuik/core/allocator.hpp>
 #include <azuik/container/iterable.hpp>
-
 namespace azuik
 {
     namespace core
@@ -76,36 +75,16 @@ namespace azuik
         } // namespace detail_
 
         template <class T, class A>
-        class list;
-
-        template <class T, class A>
-        struct iterable_traits<list<T, A>> : iterable_traits_from_allocator<T, A> {
-            using iterator = bidirectional_iterator<list<T, A>>;
-            using const_iterator = bidirectional_iterator<list<T, A> const>;
-        };
-
-        template <class T, class A>
-        struct sequence_traits<list<T, A>> {
-            using allocator_type = A;
-        };
-
-        template <class T, class A>
         class forward_list;
 
         template <class T, class A>
-        struct iterable_traits<forward_list<T, A>> : iterable_traits_from_allocator<T, A> {};
+        struct iterable_traits<forward_list<T, A>> : iterable_traits_from_allocator<T, A> {
+            using iterator = forward_iterator<forward_list<T, A>>;
+            using const_iterator = forward_iterator<forward_list<T, A> const>;
+        };
 
         template <class T, class A>
         struct sequence_traits<forward_list<T, A>> {
-            using allocator_type = A;
-        };
-        template <class T, class A>
-        class reversed_list;
-
-        template <class T, class A>
-        struct iterable_traits<reversed_list<T, A>> : iterable_traits_from_allocator<T, A> {};
-        template <class T, class A>
-        struct sequence_traits<reversed_list<T, A>> {
             using allocator_type = A;
         };
 
@@ -189,13 +168,32 @@ namespace azuik
             using const_iterator = core::const_iterator<self_type>;
         };
 
-        namespace detail_
-        {
-            template <class S>
-            class bidirectional_iterator {};
-        } // namespace detail_
+        template <class T, class A>
+        class reversed_list;
+
+        template <class T, class A>
+        struct iterable_traits<reversed_list<T, A>> : iterable_traits_from_allocator<T, A> {};
+        template <class T, class A>
+        struct sequence_traits<reversed_list<T, A>> {
+            using allocator_type = A;
+        };
+
+        template <class T, class A>
+        class list;
+
+        template <class T, class A>
+        struct iterable_traits<list<T, A>> : iterable_traits_from_allocator<T, A> {
+            using iterator = bidirectional_iterator<list<T, A>>;
+            using const_iterator = bidirectional_iterator<list<T, A> const>;
+        };
+
+        template <class T, class A>
+        struct sequence_traits<list<T, A>> {
+            using allocator_type = A;
+        };
+
         template <class T, class A = allocator>
-        class list {
+        class list : private A {
         public:
             using self_type = list;
             using allocator_type = core::allocator_type<self_type>;
@@ -215,11 +213,17 @@ namespace azuik
 
         private:
             struct empty_node {
+                node_ptr prev;
                 node_ptr next;
             };
             struct node : empty_node {};
 
         public:
+            constexpr explicit list(allocator_type const& a = {}) noexcept
+                : allocator_type{a}
+            {
+                m_head.next = m_head.prev = static_cast<node_ptr>(&m_head);
+            }
             constexpr auto empty() const noexcept
             {
                 return m_head.next == &m_head;
@@ -247,6 +251,7 @@ namespace azuik
         private:
             empty_node m_head;
         };
+
     } // namespace core
 } // namespace azuik
 #endif
