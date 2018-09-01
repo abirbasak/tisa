@@ -448,14 +448,20 @@ namespace azuik
         template <class T>
         constexpr bool is_floating_point = ::std::is_floating_point<T>{};
 
+        namespace detail_
+        {
+            template <class F, class... Args>
+            struct is_invocable_impl {
+                template <class U>
+                static auto test(U* p) -> decltype((*p)(std::declval<Args>()...), void(), true_c{});
+                template <class U>
+                static auto test(...) -> decltype(false_c{});
+                static constexpr bool value = decltype(test<F>(0))::value;
+            };
+        } // namespace detail_
+
         template <class F, class... Args>
-        struct is_invocable {
-            template <class U>
-            static auto test(U* p) -> decltype((*p)(std::declval<Args>()...), void(), true_c{});
-            template <class U>
-            static auto test(...) -> decltype(false_c{});
-            static constexpr bool value = decltype(test<F>(0))::value;
-        };
+        constexpr bool is_invocable = detail_::is_invocable_impl<F, Args...>::value;
 
         template <class T, class = enable_if<is_integral<T>>>
         using Integral = T;
@@ -520,7 +526,7 @@ namespace azuik
     namespace core
     {
         template <class Pr, class T>
-        using is_unary_predicate = is_invocable<Pr, T>;
+        constexpr bool is_unary_predicate = is_invocable<Pr, T>;
 
         template <class T, class U>
         using assignment_expression = decltype(std::declval<T&>() = std::declval<U&>());
