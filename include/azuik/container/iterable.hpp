@@ -132,11 +132,54 @@ namespace azuik
                 }
                 node_ptr m_ptr;
             };
+            template <class S>
+            struct contiguous_policy {
+                using iterator_category = std::random_access_iterator_tag;
+                using difference_type = core::difference_type<S>;
+                using node_ptr = cond<is_const<S>, typename S::node_cptr, typename S::node_ptr>;
+
+            public:
+                constexpr auto increment() noexcept
+                {
+                    ++m_ptr;
+                }
+                constexpr auto decrement() noexcept
+                {
+                    --m_ptr;
+                }
+                constexpr auto increment(difference_type n) noexcept
+                {
+                    m_ptr += n;
+                }
+                constexpr auto decrement(difference_type n) noexcept
+                {
+                    m_ptr -= n;
+                }
+                template <class That>
+                constexpr auto distance(That const& that) const noexcept
+                {
+                    return m_ptr - that.m_ptr;
+                }
+                constexpr auto deref() const noexcept
+                {
+                    return *m_ptr;
+                }
+                template <class That>
+                constexpr auto equal(That const& that) const noexcept
+                {
+                    return m_ptr == that.m_ptr;
+                }
+
+            private:
+                node_ptr m_ptr;
+            };
         } // namespace detail_
         template <class S>
         using forward_iterator = standard_iterator<S, detail_::forward_policy<S>>;
         template <class S>
         using bidirectional_iterator = standard_iterator<S, detail_::bidirectional_policy<S>>;
+        template <class S>
+        using contiguous_iterator = standard_iterator<S, detail_::contiguous_policy<S>>;
     } // namespace core
 
 } // namespace azuik
