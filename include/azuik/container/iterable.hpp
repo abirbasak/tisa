@@ -37,50 +37,64 @@ namespace azuik
             explicit constexpr standard_iterator(nonconst_self that) noexcept
                 : base_type{that}
             {}
-            constexpr self_type& operator=(nonconst_self& that) noexcept
+            auto constexpr operator=(nonconst_self& that) noexcept -> self_type&
             {
                 static_cast<base_type&>(*this) = that;
                 return *this;
             }
-            constexpr auto operator*() const noexcept
+            auto constexpr operator*() const noexcept
             {
                 return base_type::deref();
             }
-            constexpr auto operator++() noexcept
+            auto constexpr operator++() noexcept
             {
                 base_type::next();
                 return *this;
             }
-            constexpr auto operator--() noexcept
+            auto constexpr operator--() noexcept
             {
                 base_type::prev();
                 return *this;
             }
-            constexpr auto operator++(int) noexcept
+            auto constexpr operator++(int) noexcept
             {
                 self_type temp{*this};
                 ++(*this);
                 return temp;
             }
-            constexpr auto operator--(int) noexcept
+            auto constexpr operator--(int) noexcept
             {
                 self_type temp{*this};
                 --(*this);
                 return temp;
             }
-            constexpr auto operator==(self_type const& that) const noexcept
+            auto constexpr operator+=(difference_type n) noexcept
+            {
+                base_type::increment(n);
+                return *this;
+            }
+            auto constexpr operator-=(difference_type n) noexcept
+            {
+                base_type::decrement(n);
+                return *this;
+            }
+            auto constexpr operator-(self_type const& that) const noexcept
+            {
+                return base_type::distance(that);
+            }
+            auto constexpr operator==(self_type const& that) const noexcept
             {
                 return base_type::equal(that);
             }
-            constexpr auto operator!=(self_type const& that) const noexcept
+            auto constexpr operator!=(self_type const& that) const noexcept
             {
                 return !base_type::equal(that);
             }
-            constexpr auto operator==(other_type const& that) const noexcept
+            auto constexpr operator==(other_type const& that) const noexcept
             {
                 return base_type::equal(that);
             }
-            constexpr auto operator!=(other_type const& that) const noexcept
+            auto constexpr operator!=(other_type const& that) const noexcept
             {
                 return !base_type::equal(that);
             }
