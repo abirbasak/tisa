@@ -250,6 +250,56 @@ namespace azuik
             private:
                 node_ptr m_ptr;
             };
+
+            template <class S>
+            struct indexed_policy {
+            public:
+                using iterator_category = std::random_access_iterator_tag;
+
+            private:
+                using sequence_type = S;
+                using index_type = size_type<S>;
+                using difference_type = core::difference_type<S>;
+
+            private:
+                auto constexpr increment() noexcept
+                {
+                    ++m_idx;
+                }
+                auto constexpr decrement() noexcept
+                {
+                    --m_idx;
+                }
+                auto constexpr increment(difference_type n) noexcept
+                {
+                    m_idx += n;
+                }
+
+                auto constexpr decrement(difference_type n) noexcept
+                {
+                    m_idx -= n;
+                }
+                template <class That>
+                auto constexpr difference(That const& that) const noexcept
+                {
+                    assert(m_seq == that.m_seq && "comparing iterators from different container");
+                    return m_idx - that.m_idx;
+                }
+                template <class That>
+                auto constexpr equal(That const& that) const noexcept -> bool
+                {
+                    assert(m_seq == that.m_seq && "comparing iterators from different container");
+                    return m_idx == that.m_idx;
+                }
+                auto constexpr deref() const noexcept
+                {
+                    return (*m_seq)[m_idx];
+                }
+
+            private:
+                index_type m_idx;
+                sequence_type* m_seq;
+            };
         } // namespace detail_
         template <class S>
         using forward_iterator = standard_iterator<S, detail_::forward_policy<S>>;
@@ -257,6 +307,8 @@ namespace azuik
         using bidirectional_iterator = standard_iterator<S, detail_::bidirectional_policy<S>>;
         template <class S>
         using contiguous_iterator = standard_iterator<S, detail_::contiguous_policy<S>>;
+        template <class S>
+        using indexed_iterator = standard_iterator<S, detail_::indexed_policy<S>>;
     } // namespace core
 
 } // namespace azuik
