@@ -85,6 +85,10 @@ namespace azuik
             using nonconst_self = standard_iterator<remove_const<S>, Policy>;
 
         public:
+            template <class... Args>
+            constexpr standard_iterator(S& s, Args&&... args)
+                : Policy{s, static_cast<Args&&>(args)...}
+            {}
             explicit constexpr standard_iterator(nonconst_self that) noexcept
                 : base_type{that}
             {}
@@ -158,6 +162,9 @@ namespace azuik
                 using node_ptr = cond<is_const<S>, typename S::node_cptr, typename S::node_ptr>;
                 using iterator_category = std::forward_iterator_tag;
 
+                constexpr forward_policy(S& s, node_ptr ptr) noexcept
+                    : m_ptr{ptr}
+                {}
                 constexpr auto deref() const noexcept
                 {
                     return *m_ptr;
@@ -177,7 +184,9 @@ namespace azuik
             struct bidirectional_policy {
                 using node_ptr = cond<is_const<S>, typename S::node_cptr, typename S::node_ptr>;
                 using iterator_category = std::bidirectional_iterator_tag;
-
+                constexpr bidirectional_policy(S& s, node_ptr ptr) noexcept
+                    : m_ptr{ptr}
+                {}
                 constexpr auto deref() const noexcept
                 {
                     return *m_ptr;
@@ -204,6 +213,9 @@ namespace azuik
                 using node_ptr = cond<is_const<S>, typename S::node_cptr, typename S::node_ptr>;
 
             public:
+                constexpr contiguous_policy(S& s, node_ptr ptr) noexcept
+                    : m_ptr{ptr}
+                {}
                 constexpr auto increment() noexcept
                 {
                     ++m_ptr;
