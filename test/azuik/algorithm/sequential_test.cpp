@@ -31,4 +31,13 @@ AZUIK_TEST_SUIT(sequential)
         AZUIK_TEST(core::any_of(v2, 3) == false);
         AZUIK_TEST(core::any_of(v2, 2) == true);
     }
+    AZUIK_TEST_CASE(count)
+    {
+        std::vector<int> v1{1, 2, 3, 2, 5, 2, 5};
+        AZUIK_TEST(core::count(v1, 1) == 1);
+        AZUIK_TEST(core::count(v1, 2) == 3);
+        AZUIK_TEST(core::count(v1, 5) == 2);
+        AZUIK_TEST(core::count(v1, [](auto x) { return x % 2 == 0; }) == 3);
+        AZUIK_TEST(core::count(v1, [](auto x) { return x > 2; }) == 3);
+    }
 }
