@@ -645,12 +645,12 @@ namespace azuik
     } // namespace core
 } // namespace azuik
 
-#    define AZUIK_SLOT(name)                                                                       \
+#    define AZUIK_SLOT(name, call)                                                                 \
         struct name##_fn {                                                                         \
             template <class T, class... Args>                                                      \
-            constexpr auto operator()(T& x, Args&&... args) const                                  \
+            constexpr auto operator()(T&& x, Args&&... args) const                                 \
             {                                                                                      \
-                return x.name(static_cast<Args&&>(args)...);                                       \
+                return x.call(static_cast<Args&&>(args)...);                                       \
             }                                                                                      \
         } constexpr name {}
 
