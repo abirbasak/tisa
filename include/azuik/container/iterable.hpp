@@ -16,6 +16,57 @@ namespace azuik
         template <class Fn>
         class iterable {};
 
+        AZUIK_SLOT(size, size);
+        AZUIK_SLOT(empty, empty);
+        AZUIK_SLOT(capcaity, capacity);
+
+        AZUIK_SLOT(begin, begin);
+        AZUIK_SLOT(end, end);
+
+        AZUIK_SLOT(push_front, push_front);
+        AZUIK_SLOT(push_back, push_back);
+
+        AZUIK_SLOT(pop_front, pop_front);
+        AZUIK_SLOT(pop_back, pop_back);
+
+        AZUIK_SLOT(insert, insert);
+        AZUIK_SLOT(erase, erase);
+
+        AZUIK_SLOT(push, push);
+        AZUIK_SLOT(pop, pop);
+
+        inline static constexpr struct full_fn {
+            template <class S>
+            auto constexpr operator()(S&& s) const noexcept -> bool
+            {
+                return capacity(s) == size(s);
+            }
+        } const full = {};
+
+        inline static constexpr struct cbegin_fn {
+            template <class S>
+            auto constexpr operator()(S const& s) const noexcept
+            {
+                return core::begin(s);
+            }
+        } const cbegin = {};
+
+        inline static constexpr struct cend_fn {
+            template <class S>
+            auto constexpr operator()(S const& s) const noexcept
+            {
+                return core::end(s);
+            }
+        } const cend = {};
+
+        inline static constexpr struct source_fn {
+            template <class I>
+            auto constexpr operator()(I&& i) const noexcept
+            {
+                return *i;
+            }
+        } const source = {};
+
         template <class S, class Policy>
         class standard_iterator : private Policy {
         private:
