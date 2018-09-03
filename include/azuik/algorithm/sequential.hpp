@@ -141,6 +141,40 @@ namespace azuik
                 return {first, last};
             }
         } const find_range{};
+
+        struct push_sorted_fn {
+            template <class FwdIter, class Comp>
+            auto constexpr operator()(FwdIter first, FwdIter last, Comp cmp) const noexcept
+                -> FwdIter
+            {
+                auto i = std::lower_bound(first, std::prev(last), *last, cmp);
+                if (i == last || cmp(*last * i))
+                {
+                    std::rotate(first, last, i);
+                }
+            }
+            template <class FwdView, class Comp>
+            auto constexpr operator()(FwdView&& v, Comp c) const noexcept
+            {
+                return (*this)(core::begin(v), core::end(v), c);
+            }
+        } inline constexpr push_sorted{};
+
+        struct find_sorted_fn {
+            template <class FwdIter, class T, class Comp>
+            auto constexpr operator()(FwdIter first, FwdIter last, T&& x, Comp cmp) const noexcept
+                -> FwdIter
+            {
+                auto i = std::lower_bound(first, last, x, cmp);
+                return i == last || cmp(x, *i) ? last : i;
+            }
+            template <class FwdView, class T, class Comp>
+            auto constexpr operator()(FwdView&& v, T&& x, Comp cmp) const noexcept
+            {
+                return (*this)(core::begin(v), core::end(v), x, cmp);
+            }
+        } inline constexpr find_sorted{};
+
     } // namespace core
 } // namespace azuik
 #endif
