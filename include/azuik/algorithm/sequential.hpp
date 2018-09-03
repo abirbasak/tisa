@@ -2,6 +2,7 @@
 #define AZUIK_ALGORITHM_SEQUENTIAL_HPP
 #include <azuik/core/mpl.hpp>
 #include <azuik/algorithm/functional.hpp>
+#include <azuik/container/view.hpp>
 #include <algorithm>
 namespace azuik
 {
@@ -13,13 +14,13 @@ namespace azuik
                   core::enable_if<is_unary_predicate<Pred, value_type<View>>, int> = 0>            \
         auto constexpr operator()(View&& v, Pred p) const noexcept                                 \
         {                                                                                          \
-            return ::std::STD_NAME(begin(v), end(v), p);                                           \
+            return ::std::STD_NAME(core::begin(v), core::end(v), p);                               \
         }                                                                                          \
         template <class View, class T, class BiPred = equal_to_fn,                                 \
                   core::disable_if<is_unary_predicate<T, value_type<View>>, int> = 0>              \
         auto constexpr operator()(View&& v, T const& x, BiPred pr = {}) const noexcept             \
         {                                                                                          \
-            return ::std::STD_NAME(begin(v), end(v),                                               \
+            return ::std::STD_NAME(core::begin(v), core::end(v),                                   \
                                    [&x, pr](auto const& e) { return pr(x, e); });                  \
         }                                                                                          \
     };                                                                                             \
@@ -30,12 +31,12 @@ namespace azuik
         template <class View>                                                                      \
         auto constexpr operator()(View&& v) const noexcept                                         \
         {                                                                                          \
-            return ::std::STD_NAME(begin(v), end(v));                                              \
+            return ::std::STD_NAME(core::begin(v), core::end(v));                                  \
         }                                                                                          \
         template <class View, class BiPred>                                                        \
         auto constexpr operator()(View&& v, BiPred p) const noexcept                               \
         {                                                                                          \
-            return ::std::STD_NAME(begin(v), end(v), p);                                           \
+            return ::std::STD_NAME(core ::begin(v), core::end(v), p);                              \
         }                                                                                          \
     };                                                                                             \
     inline constexpr NAME##_fn NAME
@@ -45,22 +46,24 @@ namespace azuik
         template <class View1, class Iter2>                                                        \
         auto constexpr operator()(View1&& v1, Iter2 first) const noexcept                          \
         {                                                                                          \
-            return ::std::STD_NAME(begin(v1), end(v1), first);                                     \
+            return ::std::STD_NAME(core::begin(v1), core::end(v1), first);                         \
         }                                                                                          \
         template <class View1, class View2>                                                        \
         auto constexpr operator()(View1&& v1, View2&& v2) const noexcept                           \
         {                                                                                          \
-            return ::std::STD_NAME(begin(v1), end(v1), begin(v2), end(v2));                        \
+            return ::std::STD_NAME(core::begin(v1), core::end(v1), core::begin(v2),                \
+                                   core::end(v2));                                                 \
         }                                                                                          \
         template <class View1, class Iter2, class BiPred>                                          \
         auto constexpr operator()(View1&& v1, Iter2 first, BiPred p) const noexcept                \
         {                                                                                          \
-            return ::std::STD_NAME(begin(v1), end(v1), first, p);                                  \
+            return ::std::STD_NAME(core::begin(v1), core::end(v1), first, p);                      \
         }                                                                                          \
         template <class View1, class View2, class BiPred>                                          \
         auto constexpr operator()(View1&& v1, View2&& v2, BiPred p) const noexcept                 \
         {                                                                                          \
-            return ::std::STD_NAME(begin(v1), end(v1), begin(v2), end(v2), p);                     \
+            return ::std::STD_NAME(core::begin(v1), core::end(v1), core::begin(v2), core::end(v2), \
+                                   p);                                                             \
         }                                                                                          \
     };                                                                                             \
     inline constexpr NAME##_fn NAME
@@ -111,6 +114,33 @@ namespace azuik
         AZUIK_ALGORITHM_BIPRED(next_permutation, next_permutation);
         AZUIK_ALGORITHM_BIPRED(prev_permutation, prev_permutation);
 
+    } // namespace core
+
+    namespace core
+    {
+        struct for_each_fn {
+            template <class Iterable, class Fn>
+            void operator()(Iterable&& r, Fn fn) const noexcept
+            {
+                auto f = core::begin(r);
+                auto l = core::end(r);
+                for (; f != l; ++f)
+                {
+                    fn(core::source(f));
+                }
+            }
+        } const for_each{};
+
+        inline struct find_range_fn {
+            template <class FwdIterable, class T, class Pred>
+            core::range_view<FwdIterable> operator()(FwdIterable&& v, T const& x,
+                                                     Pred pr = {}) const noexcept
+            {
+                auto first = core::find(static_cast<FwdIterable&&>(v), pr);
+                auto last = core::find_not(static_cast<FwdIterable&&>(v), pr);
+                return {first, last};
+            }
+        } const find_range{};
     } // namespace core
 } // namespace azuik
 #endif
