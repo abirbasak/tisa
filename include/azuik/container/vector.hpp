@@ -85,6 +85,72 @@ namespace azuik
             size_type m_capacity;
         };
 
+        template <class T, class A = allocator>
+        class dvector;
+
+        template <class T, class A>
+        struct iterable_traits<dvector<T, A>> : iterable_traits_from_allocator<T, A> {
+            using iterator = contiguous_iterator<dvector<T, A>>;
+            using const_iterator = contiguous_iterator<dvector<T, A> const>;
+        };
+
+        template <class T, class A>
+        struct sequence_traits<dvector<T, A>> {
+            using allocator_type = A;
+        };
+
+        template <class T, class A>
+        class dvector {
+        public:
+            using self_type = dvector;
+            using allocator_type = core::allocator_type<self_type>;
+            using value_type = core::value_type<self_type>;
+            using size_type = core::size_type<self_type>;
+            using difference_type = core::difference_type<self_type>;
+            using reference = core::reference<self_type>;
+            using pointer = core::pointer<self_type>;
+            using const_reference = core::const_reference<self_type>;
+            using const_pointer = core::const_pointer<self_type>;
+            using iterator = core::iterator<self_type>;
+            using const_iterator = core::const_iterator<self_type>;
+
+        public:
+            auto constexpr size() const noexcept -> size_type
+            {
+                return m_size;
+            }
+            auto constexpr empty() const noexcept -> bool
+            {
+                return m_size == 0;
+            }
+            auto constexpr capacity() const noexcept -> size_type
+            {
+                return m_capacity;
+            }
+            auto constexpr begin() const noexcept -> const_iterator
+            {
+                return const_iterator{m_ptr + m_offset};
+            }
+            auto constexpr end() const noexcept -> const_iterator
+            {
+                return const_iterator{m_ptr + m_offset + m_size};
+            }
+            auto constexpr begin() noexcept -> iterator
+            {
+                return iterator{m_ptr + m_offset};
+            }
+            auto constexpr end() noexcept -> iterator
+            {
+                return iterator{m_ptr + m_offset + m_size};
+            }
+
+        private:
+            pointer m_ptr;
+            size_type m_size;
+            size_type m_capacity;
+            size_type m_offset;
+        };
+
     } // namespace core
 } // namespace azuik
 #endif
