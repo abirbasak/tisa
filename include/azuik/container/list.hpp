@@ -8,72 +8,22 @@ namespace azuik
     {
         namespace detail_
         {
-            struct forward_tag {};
-            struct reverse_tag {};
-            struct bidirectional_tag : virtual forward_tag, virtual reverse_tag {};
-
-            template <class Ptr, class Tag>
-            struct empty_node;
-
-            template <class Ptr>
-            struct empty_node<Ptr, forward_tag> {
-            public:
-                empty_node(Ptr, Ptr next)
-                    : m_next{next}
+            template <class A>
+            struct allocator_base : private A {
+                using allocator_type = A;
+                explicit allocator_base(allocator_type const& a)
+                    : A{a}
                 {}
-
-            private:
-                Ptr m_next;
-            };
-
-            template <class Ptr>
-            struct empty_node<Ptr, reverse_tag> {
-            public:
-                empty_node(Ptr prev, Ptr)
-                    : m_prev{prev}
-                {}
-
-            private:
-                Ptr m_prev;
-            };
-            template <class Ptr>
-            struct empty_node<Ptr, bidirectional_tag> {
-            public:
-                empty_node(Ptr prev, Ptr next)
-                    : m_prev{prev}
-                    , m_next{next}
-                {}
-
-            private:
-                Ptr m_prev;
-                Ptr m_next;
-            };
-            template <class T, class Tag>
-            struct node : private empty_node<T*, Tag> {
-            private:
-                using base_type = empty_node<T*, Tag>;
-                using value_type = T;
-
-            public:
-                template <class... Args>
-                explicit node(T* prev, T* next, Args&&... args)
-                    : base_type{prev, next}
-                    , m_value{static_cast<Args&&>(args)...}
-                {}
-                constexpr auto value() noexcept
+                auto constexpr alloc_ref() noexcept -> allocator_type&
                 {
-                    return m_value;
+                    return static_cast<allocator_type&>(*this);
                 }
-                constexpr auto value() const noexcept
+                auto constexpr alloc_ref() const noexcept -> allocator_type const&
                 {
-                    return m_value;
+                    return static_cast<allocator_type const&>(*this);
                 }
-
-            private:
-                T m_value;
             };
         } // namespace detail_
-
         template <class T, class A>
         class forward_list;
 
@@ -89,7 +39,7 @@ namespace azuik
         };
 
         template <class T, class A = allocator>
-        class forward_list : private A {
+        class forward_list : private detail_::allocator_base<A> {
         public:
             using self_type = forward_list;
             using allocator_type = core::allocator_type<self_type>;
@@ -104,18 +54,19 @@ namespace azuik
             using const_iterator = core::const_iterator<self_type>;
 
         private:
+            using base_type = detail_::allocator_base<A>;
             template <class>
             friend class detail_::forward_policy;
             struct node;
-            using node_ptr = node*;
-            using node_cptr = node const*;
+            using node_ptr = core::allocator_pointer<node, allocator_type>;
+            using node_cptr = core::allocator_const_pointer<node, allocator_type>;
             struct empty_node {
                 node_ptr next;
             };
 
             struct node : empty_node {
                 template <class... Args>
-                explicit constexpr node(Args&&... args)
+                explicit constexpr node(std::in_place_t, Args&&... args)
                     : m_value{static_cast<Args&&>(args)...}
                 {}
                 value_type m_value;
@@ -123,7 +74,7 @@ namespace azuik
 
         public:
             constexpr explicit forward_list(allocator_type const& a = {}) noexcept
-                : allocator_type{a}
+                : base_type{a}
                 , m_head{}
             {
                 m_head.next = static_cast<node_ptr>(&m_head);
@@ -134,29 +85,37 @@ namespace azuik
             }
             constexpr auto begin() noexcept
             {
-                return m_head.next;
+                return iterator{*this, m_head.next};
             }
             constexpr auto end() noexcept
             {
-                return &m_head;
+                return iterator{*this, static_cast<node_ptr>(&m_head)};
             }
             constexpr auto begin() const noexcept
             {
-                return m_head.next;
+                return const_iterator{*this, m_head.next};
             }
             constexpr auto end() const noexcept
             {
-                return &m_head;
+                return const_iterator{*this, &m_head};
             }
             template <class... Args>
             auto constexpr insert_after(const_iterator p, Args&&... args) -> iterator
             {
                 return iterator{*this, insert_after(get_node(p), static_cast<Args&&>(args)...)};
             }
+            auto constexpr erase_after(const_iterator p) -> iterator
+            {
+                return iterator{*this, erase_after(get_node(p))};
+            }
             template <class... Args>
             auto constexpr push_front(Args&&... args)
             {
                 insert_after(static_cast<node_ptr>(&m_head), static_cast<Args&&>(args)...);
+            }
+            auto constexpr pop_front() -> void
+            {
+                erase_after(static_cast<node_ptr>(&m_head));
             }
 
         private:
@@ -168,18 +127,23 @@ namespace azuik
                 p->next = n;
                 return n;
             }
+            auto constexpr erase_after(node_ptr p) -> node_ptr
+            {
+                node_ptr n = p->next;
+                p->next = n->next;
+                delete_node(n);
+                return p;
+            }
             template <class... Args>
             auto constexpr new_node(Args&&... args) -> node_ptr
             {
-                return allocate_and_construct<node>(alloc_ref(), static_cast<Args&&>(args)...);
+                return allocate_and_construct<node>(base_type::alloc_ref(), std::in_place,
+                                                    static_cast<Args&&>(args)...);
             }
-            auto constexpr alloc_ref() noexcept -> allocator_type&
+            auto constexpr delete_node(node_ptr n)
             {
-                return static_cast<allocator_type&>(*this);
-            }
-            auto constexpr alloc_ref() const noexcept -> allocator_type const&
-            {
-                return static_cast<allocator_type const&>(*this);
+                core::destroy(n);
+                base_type::alloc_ref().template deallocate<node>(n);
             }
 
         private:
@@ -227,12 +191,13 @@ namespace azuik
         };
 
         template <class T, class A = allocator>
-        class list : private A {
+        class list : private detail_::allocator_base<A> {
         public:
             using self_type = list;
             using allocator_type = core::allocator_type<self_type>;
             using value_type = core::value_type<self_type>;
             using size_type = core::size_type<self_type>;
+            using difference_type = core::difference_type<self_type>;
             using pointer = core::pointer<self_type>;
             using const_pointer = core::const_pointer<self_type>;
             using reference = core::reference<self_type>;
@@ -241,20 +206,31 @@ namespace azuik
             using const_iterator = core::const_iterator<self_type>;
 
         private:
+            template <class>
+            friend class detail_::bidirectional_policy;
+
+            using base_type = detail_::allocator_base<A>;
             struct empty_node;
             struct node;
             using node_ptr = core::allocator_pointer<node, allocator_type>;
+            using node_cptr = core::allocator_const_pointer<node, allocator_type>;
 
         private:
             struct empty_node {
                 node_ptr prev;
                 node_ptr next;
             };
-            struct node : empty_node {};
+            struct node : empty_node {
+                template <class... Args>
+                constexpr node(std::in_place_t, Args&&... args)
+                    : value{static_cast<Args&&>(args)...}
+                {}
+                value_type value;
+            };
 
         public:
             constexpr explicit list(allocator_type const& a = {}) noexcept
-                : allocator_type{a}
+                : base_type{a}
             {
                 m_head.next = m_head.prev = static_cast<node_ptr>(&m_head);
             }
@@ -268,7 +244,7 @@ namespace azuik
             }
             constexpr auto end() noexcept
             {
-                return iterator{*this, m_head};
+                return iterator{*this, static_cast<node_ptr>(&m_head)};
             }
             constexpr auto begin() const noexcept
             {
@@ -276,14 +252,67 @@ namespace azuik
             }
             constexpr auto end() const noexcept
             {
-                return const_iterator{*this, m_head.next};
+                return const_iterator{*this, static_cast<node_cptr>(&m_head)};
             }
             template <class... Args>
-            iterator insert(const_iterator p, Args&&... args)
-            {}
+            auto constexpr insert(const_iterator p, Args&&... args) -> iterator
+            {
+                return iterator{*this, insert(get_node(p), static_cast<Args&&>(args)...)};
+            }
+
+            auto constexpr erase(const_iterator p) -> iterator
+            {
+                return iterator{*this, erase(get_node(p))};
+            }
+            template <class... Args>
+            void push_front(Args&&... args)
+            {
+                insert(m_head.next, static_cast<Args&&>(args)...);
+            }
             template <class... Args>
             void push_back(Args&&... args)
-            {}
+            {
+                insert(m_head.prev, static_cast<Args&&>(args)...);
+            }
+            void pop_front()
+            {
+                erase(m_head.next);
+            }
+            void pop_back()
+            {
+                erase(m_head.prev);
+            }
+
+        private:
+            template <class... Args>
+            auto constexpr insert(node_ptr p, Args&&... args) -> node_ptr
+            {
+                node_ptr n = new_node(static_cast<Args&&>(args)...);
+                n->next = p;
+                n->prev = p->prev;
+                p->prev->next = n;
+                p->prev = n;
+                return p;
+            }
+            auto constexpr erase(node_ptr p) -> node_ptr
+            {
+                node_ptr n = p->next;
+                p->prev->next = n;
+                n->prev = p->prev;
+                delete_node(p);
+                return n;
+            }
+            template <class... Args>
+            auto constexpr new_node(Args&&... args) -> node_ptr
+            {
+                return allocate_and_construct<node>(base_type::alloc_ref(), std::in_place,
+                                                    static_cast<Args&&>(args)...);
+            }
+            auto constexpr delete_node(node_ptr n)
+            {
+                core::destroy(n);
+                base_type::alloc_ref().template deallocate<node>(n);
+            }
 
         private:
             empty_node m_head;
