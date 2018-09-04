@@ -166,6 +166,13 @@ namespace azuik
             alloc_ptr m_alloc;
         };
 
-    } // namespace core
+        template <class T, class A, class... Args>
+        auto constexpr allocate_and_construct(A& a, Args&&... args) -> core::allocator_pointer<T, A>
+        {
+            memory_guard<T, A> g{a};
+            return g.construct(static_cast<Args&&>(args)...);
+        }
+    }; // namespace core
+
 } // namespace azuik
 #endif
