@@ -67,7 +67,17 @@ namespace azuik
                 return static_cast<allocator_pointer<T, self_type>>(::std::malloc(sizeof(T) * n));
             }
             template <class T>
+            allocator_pointer<T, self_type> allocate()
+            {
+                return static_cast<allocator_pointer<T, self_type>>(::std::malloc(sizeof(T)));
+            }
+            template <class T>
             void deallocate(allocator_pointer<T, self_type> p, allocator_size<T, self_type>)
+            {
+                ::std::free(p);
+            }
+            template <class T>
+            void deallocate(allocator_pointer<T, self_type> p)
             {
                 ::std::free(p);
             }
@@ -157,7 +167,7 @@ namespace azuik
             {
                 if (m_alloc)
                 {
-                    (*m_alloc).deallocate();
+                    (*m_alloc).template deallocate<T>(m_ptr);
                 }
             }
 
