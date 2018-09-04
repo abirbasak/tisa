@@ -134,6 +134,38 @@ namespace azuik
                 Alloc::deallocate(allocator_pointer<T, Alloc>(mem));
             }
         };
+
+        template <class T, class A>
+        struct memory_guard {
+        private:
+            using alloc_ptr = A*;
+            using value_ptr = core::allocator_pointer<T, A>;
+
+        public:
+            explicit memory_guard(A& alloc)
+                : m_alloc{&alloc}
+                , m_ptr{alloc.template allocate<T>()}
+            {}
+            template <class... Args>
+            auto construct(Args&&... args) -> value_ptr
+            {
+                core::construct(m_ptr, static_cast<Args&&>(args)...);
+                m_alloc = nullptr;
+                return m_ptr;
+            }
+            ~memory_guard()
+            {
+                if (m_alloc)
+                {
+                    (*m_alloc).deallocate();
+                }
+            }
+
+        private:
+            value_ptr m_ptr;
+            alloc_ptr m_alloc;
+        };
+
     } // namespace core
 } // namespace azuik
 #endif
