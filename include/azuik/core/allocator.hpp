@@ -40,7 +40,7 @@ namespace azuik
         struct iterable_traits_from_allocator {
             using value_type = allocator_value<T, A>;
             using size_type = allocator_size<T, A>;
-            using differece_type = allocator_difference<T, A>;
+            using difference_type = allocator_difference<T, A>;
             using reference = allocator_reference<T, A>;
             using pointer = allocator_pointer<T, A>;
             using const_reference = allocator_const_reference<T, A>;
