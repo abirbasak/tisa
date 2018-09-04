@@ -88,8 +88,8 @@ namespace azuik
             using allocator_type = A;
         };
 
-        template <class T, class A>
-        class forward_list {
+        template <class T, class A = allocator>
+        class forward_list : private A {
         public:
             using self_type = forward_list;
             using allocator_type = core::allocator_type<self_type>;
@@ -104,13 +104,16 @@ namespace azuik
             using const_iterator = core::const_iterator<self_type>;
 
         private:
+            template <class>
+            friend class detail_::forward_policy;
             struct node;
             using node_ptr = node*;
+            using node_cptr = node const*;
             struct empty_node {
                 node_ptr next;
             };
 
-            struct node : private empty_node {
+            struct node : empty_node {
                 template <class... Args>
                 explicit constexpr node(Args&&... args)
                     : m_value{static_cast<Args&&>(args)...}
@@ -119,14 +122,15 @@ namespace azuik
             };
 
         public:
-            forward_list()
-                : m_head{}
+            constexpr explicit forward_list(allocator_type const& a = {}) noexcept
+                : allocator_type{a}
+                , m_head{}
             {
-                m_head.next = &m_head;
+                m_head.next = static_cast<node_ptr>(&m_head);
             }
             constexpr auto empty() const noexcept
             {
-                return m_head.next == &m_head;
+                return m_head.next == static_cast<node_cptr>(&m_head);
             }
             constexpr auto begin() noexcept
             {
@@ -145,8 +149,38 @@ namespace azuik
                 return &m_head;
             }
             template <class... Args>
-            void push_back(Args&&... args)
-            {}
+            auto constexpr insert_after(const_iterator p, Args&&... args) -> iterator
+            {
+                return iterator{*this, insert_after(get_node(p), static_cast<Args&&>(args)...)};
+            }
+            template <class... Args>
+            auto constexpr push_front(Args&&... args)
+            {
+                insert_after(static_cast<node_ptr>(&m_head), static_cast<Args&&>(args)...);
+            }
+
+        private:
+            template <class... Args>
+            auto constexpr insert_after(node_ptr p, Args&&... args) -> node_ptr
+            {
+                node_ptr n = new_node(static_cast<Args>(args)...);
+                n->next = p->next;
+                p->next = n;
+                return n;
+            }
+            template <class... Args>
+            auto constexpr new_node(Args&&... args) -> node_ptr
+            {
+                return allocate_and_construct<node>(alloc_ref(), static_cast<Args&&>(args)...);
+            }
+            auto constexpr alloc_ref() noexcept -> allocator_type&
+            {
+                return static_cast<allocator_type&>(*this);
+            }
+            auto constexpr alloc_ref() const noexcept -> allocator_type const&
+            {
+                return static_cast<allocator_type const&>(*this);
+            }
 
         private:
             empty_node m_head;
@@ -244,6 +278,9 @@ namespace azuik
             {
                 return const_iterator{*this, m_head.next};
             }
+            template <class... Args>
+            iterator insert(const_iterator p, Args&&... args)
+            {}
             template <class... Args>
             void push_back(Args&&... args)
             {}
