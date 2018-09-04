@@ -83,7 +83,7 @@ namespace azuik
         } const source = {};
 
         template <class S, class Policy>
-        class standard_iterator : private Policy {
+        class standard_iterator : public Policy {
         private:
             using base_type = Policy;
 
@@ -118,12 +118,12 @@ namespace azuik
             }
             auto constexpr operator++() noexcept
             {
-                base_type::next();
+                base_type::increment();
                 return *this;
             }
             auto constexpr operator--() noexcept
             {
-                base_type::prev();
+                base_type::decrement();
                 return *this;
             }
             auto constexpr operator++(int) noexcept
@@ -202,6 +202,7 @@ namespace azuik
                 constexpr bidirectional_policy(S& s, node_ptr ptr) noexcept
                     : m_ptr{ptr}
                 {}
+
                 constexpr auto deref() const noexcept
                 {
                     return *m_ptr;
