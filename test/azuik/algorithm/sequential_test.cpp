@@ -40,4 +40,25 @@ AZUIK_TEST_SUIT(sequential)
         AZUIK_TEST(core::count(v1, [](auto x) { return x % 2 == 0; }) == 3);
         AZUIK_TEST(core::count(v1, [](auto x) { return x > 2; }) == 3);
     }
+    AZUIK_TEST_CASE(find)
+    {
+        std::vector<int> v{0, 1, 2, 3, 4, 5};
+
+        AZUIK_TEST(*core::find(v, 3) == 3);
+        AZUIK_TEST(core::find(v, 10) == std::end(v));
+
+        AZUIK_TEST(*core::find(v, [](auto x) { return x == 3; }) == 3);
+        AZUIK_TEST(core::find(v, [](auto x) { return x == 10; }) == std::end(v));
+    }
+    AZUIK_TEST_CASE(find_not)
+    {
+        std::vector<int> v0{1, 1, 1, 3, 4, 5};
+
+        AZUIK_TEST(*core::find_not(v0, 1) == 3);
+        std::vector<int> v1{3, 3, 3, 3, 3, 3};
+        AZUIK_TEST(core::find_not(v1, 3) == std::end(v1));
+        std::vector<int> v2{0, 1, 2, 3, 4, 5};
+        AZUIK_TEST(*core::find_not(v2, [](auto x) { return x != 3; }) == 3);
+        AZUIK_TEST(core::find_not(v2, [](auto x) { return x != 10; }) == std::end(v2));
+    }
 }
