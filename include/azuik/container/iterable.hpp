@@ -108,7 +108,7 @@ namespace azuik
             constexpr explicit standard_iterator(S& s, Args&&... args) noexcept
                 : base_type{s, static_cast<Args&&>(args)...}
             {}
-            explicit constexpr standard_iterator(nonconst_self that) noexcept
+            constexpr standard_iterator(nonconst_self that) noexcept
                 : base_type{static_cast<nonconst_base>(that)}
             {}
             auto constexpr operator=(nonconst_self const& that) noexcept -> self_type&
