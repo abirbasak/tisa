@@ -212,7 +212,7 @@ namespace azuik
             };
             template <class S>
             struct bidirectional_policy {
-                using node_ptr = typename S::node_cptr;
+                using node_ptr = typename S::node_ptr;
                 using iterator_category = std::bidirectional_iterator_tag;
                 using value_type = core::value_type<S>;
 
