@@ -81,18 +81,14 @@ namespace azuik
             }
             constexpr explicit forward_list(std::initializer_list<value_type> init,
                                             allocator_type const& a = {})
-                : base_type{a}
-                , m_head{}
+                : forward_list{a}
             {
-                m_head.next = static_cast<node_ptr>(&m_head);
                 insert_after(before_begin(), init.begin(), init.end());
             }
             template <class InIter>
             constexpr explicit forward_list(InIter first, InIter last, allocator_type const& a = {})
-                : base_type{a}
-                , m_head{}
+                : forward_list{a}
             {
-                m_head.next = static_cast<node_ptr>(&m_head);
                 insert_after(before_begin(), first, last);
             }
 
