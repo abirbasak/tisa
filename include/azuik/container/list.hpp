@@ -84,9 +84,6 @@ namespace azuik
                 : base_type{a}
                 , m_head{}
             {
-                iterator i;
-                const_iterator ci{i};
-                ci = i;
                 m_head.next = static_cast<node_ptr>(&m_head);
                 insert_after(before_begin(), init.begin(), init.end());
             }
@@ -122,7 +119,7 @@ namespace azuik
             template <class... Args>
             auto constexpr insert_after(const_iterator p, Args&&... args) -> iterator
             {
-                return iterator{*this, insert_after(get_node(p), static_cast<Args&&>(args)...)};
+                return iterator{*this, insert_after(p.get_node(), static_cast<Args&&>(args)...)};
             }
             template <class InIter>
             auto constexpr insert_after(const_iterator p, InIter first, InIter last) -> iterator
@@ -131,7 +128,7 @@ namespace azuik
                 {
                     insert_after(p, *first);
                 }
-                return iterator{*this, get_node(p)};
+                return iterator{*this, p.get_node()};
             }
             auto constexpr erase_after(const_iterator p) -> iterator
             {
