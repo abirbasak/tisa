@@ -67,9 +67,9 @@ namespace azuik
             struct node : empty_node {
                 template <class... Args>
                 explicit constexpr node(std::in_place_t, Args&&... args)
-                    : m_value{static_cast<Args&&>(args)...}
+                    : value{static_cast<Args&&>(args)...}
                 {}
-                value_type m_value;
+                value_type value;
             };
 
         public:
@@ -79,6 +79,26 @@ namespace azuik
             {
                 m_head.next = static_cast<node_ptr>(&m_head);
             }
+            constexpr explicit forward_list(std::initializer_list<value_type> init,
+                                            allocator_type const& a = {})
+                : base_type{a}
+                , m_head{}
+            {
+                iterator i;
+                const_iterator ci{i};
+                ci = i;
+                m_head.next = static_cast<node_ptr>(&m_head);
+                insert_after(before_begin(), init.begin(), init.end());
+            }
+            template <class InIter>
+            constexpr explicit forward_list(InIter first, InIter last, allocator_type const& a = {})
+                : base_type{a}
+                , m_head{}
+            {
+                m_head.next = static_cast<node_ptr>(&m_head);
+                insert_after(before_begin(), first, last);
+            }
+
             constexpr auto empty() const noexcept
             {
                 return m_head.next == static_cast<node_cptr>(&m_head);
@@ -103,6 +123,15 @@ namespace azuik
             auto constexpr insert_after(const_iterator p, Args&&... args) -> iterator
             {
                 return iterator{*this, insert_after(get_node(p), static_cast<Args&&>(args)...)};
+            }
+            template <class InIter>
+            auto constexpr insert_after(const_iterator p, InIter first, InIter last) -> iterator
+            {
+                for (; first != last; ++first)
+                {
+                    insert_after(p, *first);
+                }
+                return iterator{*this, get_node(p)};
             }
             auto constexpr erase_after(const_iterator p) -> iterator
             {
@@ -144,6 +173,14 @@ namespace azuik
             {
                 core::destroy(n);
                 base_type::alloc_ref().template deallocate<node>(n);
+            }
+            auto constexpr before_begin() noexcept -> iterator
+            {
+                return iterator{*this, static_cast<node_ptr>(&m_head)};
+            }
+            auto constexpr before_begin() const noexcept -> const_iterator
+            {
+                return const_iterator{*this, static_cast<node_cptr>(&m_head)};
             }
 
         private:
