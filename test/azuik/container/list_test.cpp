@@ -86,4 +86,15 @@ AZUIK_TEST_SUIT(list_test)
         l.pop_back();
         AZUIK_TEST(std::distance(l.begin(), l.end()) == 0);
     }
+    AZUIK_TEST_CASE(constructor)
+    {
+        core::forward_list<int> l0{1, 2};
+        AZUIK_TEST(std::distance(l0.begin(), l0.end()) == 2);
+
+        core::forward_list<int> l1{1, 2, 3};
+        AZUIK_TEST(std::distance(l1.begin(), l1.end()) == 3);
+
+        core::forward_list<int> l2{1, 2, 3, 4};
+        AZUIK_TEST(std::distance(l2.begin(), l2.end()) == 4);
+    }
 }
