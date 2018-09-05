@@ -82,10 +82,10 @@ namespace azuik
             }
         } const source = {};
 
-        template <class S, class Policy>
-        class standard_iterator : public Policy {
+        template <class S, template <class> class Policy>
+        class standard_iterator : public Policy<S> {
         private:
-            using base_type = Policy;
+            using base_type = Policy<S>;
 
         public:
             using self_type = standard_iterator;
@@ -98,18 +98,22 @@ namespace azuik
 
         private:
             using nonconst_self = standard_iterator<remove_const<S>, Policy>;
+            using nonconst_base = Policy<remove_const<S>>;
 
         public:
+            constexpr standard_iterator() noexcept
+                : base_type{}
+            {}
             template <class... Args>
-            constexpr standard_iterator(S& s, Args&&... args)
-                : Policy{s, static_cast<Args&&>(args)...}
+            constexpr explicit standard_iterator(S& s, Args&&... args) noexcept
+                : base_type{s, static_cast<Args&&>(args)...}
             {}
             explicit constexpr standard_iterator(nonconst_self that) noexcept
-                : base_type{that}
+                : base_type{static_cast<nonconst_base>(that)}
             {}
-            auto constexpr operator=(nonconst_self& that) noexcept -> self_type&
+            auto constexpr operator=(nonconst_self const& that) noexcept -> self_type&
             {
-                static_cast<base_type&>(*this) = that;
+                static_cast<base_type&>(*this) = static_cast<nonconst_base const&>(that);
                 return *this;
             }
             auto constexpr operator*() const noexcept
@@ -176,13 +180,26 @@ namespace azuik
             struct forward_policy {
                 using node_ptr = cond<is_const<S>, typename S::node_cptr, typename S::node_ptr>;
                 using iterator_category = std::forward_iterator_tag;
+                using value_type = core::value_type<S>;
+                using nonconst_self = forward_policy<remove_const<S>>;
 
+                constexpr forward_policy() noexcept
+                    : m_ptr{nullptr}
+                {}
                 constexpr forward_policy(S& s, node_ptr ptr) noexcept
                     : m_ptr{ptr}
                 {}
-                constexpr auto deref() const noexcept
+                constexpr forward_policy(nonconst_self const& that) noexcept
+                    : m_ptr{that.m_ptr}
+                {}
+                auto constexpr operator=(nonconst_self const& that) noexcept -> forward_policy
                 {
-                    return *m_ptr;
+                    m_ptr = that.m_ptr;
+                    return *this;
+                }
+                constexpr auto deref() const noexcept -> value_type
+                {
+                    return (*m_ptr).value();
                 }
                 constexpr auto increment() noexcept
                 {
@@ -199,11 +216,15 @@ namespace azuik
             struct bidirectional_policy {
                 using node_ptr = cond<is_const<S>, typename S::node_cptr, typename S::node_ptr>;
                 using iterator_category = std::bidirectional_iterator_tag;
+                using value_type = core::value_type<S>;
+                constexpr bidirectional_policy() noexcept
+                    : m_ptr{nullptr}
+                {}
                 constexpr bidirectional_policy(S& s, node_ptr ptr) noexcept
                     : m_ptr{ptr}
                 {}
 
-                constexpr auto deref() const noexcept
+                constexpr auto deref() const noexcept -> value_type
                 {
                     return *m_ptr;
                 }
@@ -229,6 +250,9 @@ namespace azuik
                 using node_ptr = cond<is_const<S>, typename S::node_cptr, typename S::node_ptr>;
 
             public:
+                constexpr contiguous_policy() noexcept
+                    : m_ptr{nullptr}
+                {}
                 constexpr contiguous_policy(S& s, node_ptr ptr) noexcept
                     : m_ptr{ptr}
                 {}
@@ -318,13 +342,13 @@ namespace azuik
             };
         } // namespace detail_
         template <class S>
-        using forward_iterator = standard_iterator<S, detail_::forward_policy<S>>;
+        using forward_iterator = standard_iterator<S, detail_::forward_policy>;
         template <class S>
-        using bidirectional_iterator = standard_iterator<S, detail_::bidirectional_policy<S>>;
+        using bidirectional_iterator = standard_iterator<S, detail_::bidirectional_policy>;
         template <class S>
-        using contiguous_iterator = standard_iterator<S, detail_::contiguous_policy<S>>;
+        using contiguous_iterator = standard_iterator<S, detail_::contiguous_policy>;
         template <class S>
-        using indexed_iterator = standard_iterator<S, detail_::indexed_policy<S>>;
+        using indexed_iterator = standard_iterator<S, detail_::indexed_policy>;
     } // namespace core
 
 } // namespace azuik
