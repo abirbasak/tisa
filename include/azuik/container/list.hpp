@@ -264,6 +264,12 @@ namespace azuik
             {
                 m_head.next = m_head.prev = static_cast<node_ptr>(&m_head);
             }
+            constexpr explicit list(std::initializer_list<value_type> ilist,
+                                    allocator_type const& a = {})
+                : list{a}
+            {
+                insert(before_begin(), ilist.begin(), ilist.end());
+            }
             constexpr auto empty() const noexcept
             {
                 return m_head.next == &m_head;
@@ -287,7 +293,16 @@ namespace azuik
             template <class... Args>
             auto constexpr insert(const_iterator p, Args&&... args) -> iterator
             {
-                return iterator{*this, insert(get_node(p), static_cast<Args&&>(args)...)};
+                return iterator{*this, insert(p.get_node(), static_cast<Args&&>(args)...)};
+            }
+            template <class InIter>
+            auto constexpr insert(const_iterator p, InIter first, InIter last) -> iterator
+            {
+                for (; first != last; ++first)
+                {
+                    insert(before_begin(), *first);
+                }
+                return iterator{*this, p.get_node()};
             }
 
             auto constexpr erase(const_iterator p) -> iterator
@@ -314,6 +329,14 @@ namespace azuik
             }
 
         private:
+            auto constexpr before_begin() noexcept -> iterator
+            {
+                return iterator{*this, static_cast<node_ptr>(&m_head)};
+            }
+            auto constexpr before_begin() const noexcept -> const_iterator
+            {
+                return const_iterator{*this, static_cast<node_cptr>(&m_head)};
+            }
             template <class... Args>
             auto constexpr insert(node_ptr p, Args&&... args) -> node_ptr
             {
