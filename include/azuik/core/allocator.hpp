@@ -172,8 +172,8 @@ namespace azuik
             }
 
         private:
-            value_ptr m_ptr;
             alloc_ptr m_alloc;
+            value_ptr m_ptr;
         };
 
         template <class T, class A, class... Args>

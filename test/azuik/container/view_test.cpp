@@ -9,7 +9,7 @@ AZUIK_TEST_SUIT(view)
         using S = std::vector<int>;
         S v{};
         using RV = core::range_view<S>;
-        core::range_view<S> rv{v};
+        RV rv{v};
         AZUIK_TEST(rv.empty() == true);
     }
     AZUIK_TEST_CASE(size)
@@ -17,7 +17,7 @@ AZUIK_TEST_SUIT(view)
         using S = std::vector<int>;
         S v{1, 3, 5, 7};
         using RV = core::range_view<S>;
-        core::range_view<S> rv{v};
+        RV rv{v};
         AZUIK_TEST(rv.size() == v.size());
     }
 }

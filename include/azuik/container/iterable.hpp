@@ -181,7 +181,8 @@ namespace azuik
         namespace detail_
         {
             template <class S>
-            struct forward_policy {
+            class forward_policy {
+            public:
                 using node_ptr = typename S::node_ptr;
                 using iterator_category = std::forward_iterator_tag;
                 using value_type = core::value_type<S>;
@@ -211,7 +212,8 @@ namespace azuik
                 node_ptr m_ptr;
             };
             template <class S>
-            struct bidirectional_policy {
+            class bidirectional_policy {
+            public:
                 using node_ptr = typename S::node_ptr;
                 using iterator_category = std::bidirectional_iterator_tag;
                 using value_type = core::value_type<S>;
