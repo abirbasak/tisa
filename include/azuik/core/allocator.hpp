@@ -47,6 +47,17 @@ namespace azuik
             using const_pointer = allocator_const_pointer<T, A>;
         };
 
+        template <class S>
+        struct iterable_traits_from_sequence {
+            using value_type = core::value_type<S>;
+            using size_type = core::size_type<S>;
+            using difference_type = core::difference_type<S>;
+            using reference = core::reference<S>;
+            using pointer = core::pointer<S>;
+            using const_reference = core::const_reference<S>;
+            using const_pointer = core::const_pointer<S>;
+        };
+
         template <class T, class A>
         allocator_pointer<T, A> allocate(A& a, allocator_size<T, A> n = 1)
         {
