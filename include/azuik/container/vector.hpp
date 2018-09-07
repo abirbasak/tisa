@@ -150,7 +150,111 @@ namespace azuik
             size_type m_capacity;
             size_type m_offset;
         };
+        template <class V, class Comp = less_fn>
+        class assoc_vector : private V, Comp {
+        private:
+            using base_type = V;
 
+        public:
+            using self_type = assoc_vector;
+            using allocator_type = core::allocator_type<base_type>;
+            using value_type = core::value_type<base_type>;
+            using size_type = core::size_type<base_type>;
+            using difference_type = core::difference_type<base_type>;
+            using reference = core::reference<base_type>;
+            using pointer = core::pointer<base_type>;
+            using const_reference = core::const_reference<base_type>;
+            using const_pointer = core::const_pointer<base_type>;
+            using iterator = core::iterator<base_type>;
+            using const_iterator = core::const_iterator<base_type>;
+            using key_compare = Comp;
+
+        public:
+            explicit assoc_vector(key_compare const& comp, allocator_type const& a = {}) noexcept
+                : base_type{a}
+                , key_compare{comp}
+            {}
+            template <class Key>
+            auto constexpr lower_bound(Key const& key) noexcept -> iterator
+            {
+                return std::lower_bound(begin(), end(), key, comp_ref());
+            }
+            template <class Key>
+            auto constexpr lower_bound(Key const& key) const noexcept -> const_iterator
+            {
+                return std::lower_bound(begin(), end(), key, comp_ref());
+            }
+
+            template <class Key>
+            auto constexpr upper_bound(Key const& key) noexcept -> iterator
+            {
+                return std::upper_bound(begin(), end(), key, comp_ref());
+            }
+
+            template <class Key>
+            auto constexpr upper_bound(Key const& key) const noexcept -> const_iterator
+            {
+                return std::upper_bound(begin(), end(), key, comp_ref());
+            }
+
+            template <class Key>
+            auto constexpr equal_range(Key const& key) noexcept -> iterator
+            {
+                return std::equal_range(begin(), end(), key, comp_ref());
+            }
+
+            template <class Key>
+            auto constexpr equal_range(Key const& key) const noexcept -> const_iterator
+            {
+                return std::equal_range(begin(), end(), key, comp_ref());
+            }
+            template <class Key>
+            auto constexpr find(Key const& key) const noexcept -> const_iterator
+            {
+                auto pos = lower_bound(key);
+                if (pos != end() && comp_ref(key, std::get<0>(pos)))
+                {
+                    pos = end();
+                }
+                return pos;
+            }
+            template <class Key>
+            auto constexpr find(Key const& key) noexcept -> iterator
+            {
+                auto pos = lower_bound(key);
+                if (pos != end() && comp_ref(key, std::get<0>(pos)))
+                {
+                    pos = end();
+                }
+                return pos;
+            }
+            template <class Key>
+            auto constexpr erase(Key const& key) -> size_type
+            {
+                auto pos = find(key);
+                if (pos == end())
+                {
+                    return 0;
+                }
+                erase(pos);
+                return 1;
+            }
+
+        public:
+            using base_type::begin;
+            using base_type::clear;
+            using base_type::empty;
+            using base_type::end;
+            using base_type::erase;
+            using base_type::reserve;
+            using base_type::size;
+
+        private:
+            auto constexpr comp_ref() const noexcept -> key_compare const&
+            {
+                return static_cast<key_compare const&>(*this);
+            }
+        };
     } // namespace core
 } // namespace azuik
 #endif
