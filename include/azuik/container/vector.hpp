@@ -2,6 +2,8 @@
 #define AZUIK_CONTAINER_VECTOR_HPP
 #include <azuik/core/allocator.hpp>
 #include <azuik/container/iterable.hpp>
+#include <azuik/algorithm/functional.hpp>
+#include <algorithm>
 namespace azuik
 {
     namespace core
@@ -150,23 +152,37 @@ namespace azuik
             size_type m_capacity;
             size_type m_offset;
         };
+
         template <class V, class Comp = less_fn>
+        class assoc_vector;
+
+        template <class V, class Comp>
+        struct iterable_traits<assoc_vector<V, Comp>> : iterable_traits_from_sequence<V> {
+            using iterator = core::iterator<V>;
+            using const_iterator = core::const_iterator<V>;
+        };
+
+        template <class V, class Comp>
+        struct sequence_traits<assoc_vector<V, Comp>> {
+            using allocator_type = core::allocator_type<V>;
+        };
+        template <class V, class Comp>
         class assoc_vector : private V, Comp {
         private:
             using base_type = V;
 
         public:
             using self_type = assoc_vector;
-            using allocator_type = core::allocator_type<base_type>;
-            using value_type = core::value_type<base_type>;
-            using size_type = core::size_type<base_type>;
-            using difference_type = core::difference_type<base_type>;
-            using reference = core::reference<base_type>;
-            using pointer = core::pointer<base_type>;
-            using const_reference = core::const_reference<base_type>;
-            using const_pointer = core::const_pointer<base_type>;
-            using iterator = core::iterator<base_type>;
-            using const_iterator = core::const_iterator<base_type>;
+            using allocator_type = core::allocator_type<self_type>;
+            using value_type = core::value_type<self_type>;
+            using size_type = core::size_type<self_type>;
+            using difference_type = core::difference_type<self_type>;
+            using reference = core::reference<self_type>;
+            using pointer = core::pointer<self_type>;
+            using const_reference = core::const_reference<self_type>;
+            using const_pointer = core::const_pointer<self_type>;
+            using iterator = core::iterator<self_type>;
+            using const_iterator = core::const_iterator<self_type>;
             using key_compare = Comp;
 
         public:
