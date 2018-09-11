@@ -227,22 +227,12 @@ namespace azuik
             template <class Key>
             auto constexpr find(Key const& key) const noexcept -> const_iterator
             {
-                auto pos = lower_bound(key);
-                if (pos != end() && comp_ref(key, std::get<0>(pos)))
-                {
-                    pos = end();
-                }
-                return pos;
+                return find_sorted(begin(), end(), key, comp_ref());
             }
             template <class Key>
             auto constexpr find(Key const& key) noexcept -> iterator
             {
-                auto pos = lower_bound(key);
-                if (pos != end() && comp_ref(key, std::get<0>(pos)))
-                {
-                    pos = end();
-                }
-                return pos;
+                return find_sorted(begin(), end(), key, comp_ref());
             }
             template <class Key>
             auto constexpr erase(Key const& key) -> size_type
