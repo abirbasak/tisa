@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <new>
+#include <utility>
 
 namespace azuik
 {
@@ -56,6 +57,12 @@ namespace azuik
             using pointer = core::pointer<S>;
             using const_reference = core::const_reference<S>;
             using const_pointer = core::const_pointer<S>;
+        };
+
+        template <class S, class Pr>
+        struct ordered_traits_from_sequence : iterable_traits_from_sequence<S> {
+            using key_type = std::tuple_element<0, core::value_type<S>>;
+            using key_compare = Pr;
         };
 
         template <class T, class A>
