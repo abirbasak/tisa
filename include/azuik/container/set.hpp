@@ -41,75 +41,35 @@ namespace azuik
             using const_pointer = core::const_pointer<self_type>;
             using iterator = core::iterator<self_type>;
             using const_iterator = core::const_iterator<self_type>;
-            using key_compare = core::key_cpmpare<self_type>;
+            using key_compare = core::key_compare<self_type>;
             using key_type = core::key_type<self_type>;
 
         public:
-            linear_set(value_compare const& comp = {})
-                : value_compare{comp}
+            linear_set(key_compare const& comp = {})
+                : base_type{comp}
             {}
             template <class FwdIter>
-            linear_set(FwdIter first, FwdIter last, value_compare const& comp = {})
-                : value_compare{comp}
-                , m_impl(first, last)
-            {
-                std::sort(first, last, get_comparator());
-            }
-            constexpr auto begin() noexcept -> iterator
-            {
-                return m_impl.begin();
-            }
-            constexpr auto end() noexcept -> iterator
-            {
-                return m_impl.end();
-            }
-            constexpr auto begin() const noexcept -> const_iterator
-            {
-                return m_impl.begin();
-            }
-            constexpr auto end() const noexcept -> const_iterator
-            {
-                return m_impl.end();
-            }
-            constexpr auto size() const noexcept -> size_type
-            {
-                return m_impl.size();
-            }
-            constexpr auto empty() const noexcept -> bool
-            {
-                return m_impl.empty();
-            }
-            constexpr auto capacity() const noexcept -> size_type
-            {
-                return m_impl.capacity();
-            }
-            template <class V>
-            constexpr auto find(V&& v) noexcept -> iterator
-            {
-                return ordered_find(m_impl.begin(), m_impl.end(), static_cast<V&&>(x),
-                                    get_comparator());
-            }
-            template <class V>
-            constexpr auto find(V&& v) const noexcept -> const_iterator
-            {
-                return ordered_find(m_impl.begin(), m_impl.end(), static_cast<V&&>(x),
-                                    get_comparator());
-            }
+            linear_set(FwdIter first, FwdIter last, key_compare const& comp = {})
+                : base_type{comp, first, last}
+            {}
 
-        private:
-            constexpr auto get_comparator() const noexcept -> value_compare const&
-            {
-                return static_cast<value_compare const&>(*this);
-            }
+        public:
+            using base_type::begin;
+            using base_type::capacity;
+            using base_type::empty;
+            using base_type::end;
+            using base_type::equal_range;
+            using base_type::find;
+            using base_type::lower_bound;
+            using base_type::upper_bound;
 
-        private:
-            storage_type m_impl;
+            using base_type::size;
         };
-        template <class T, class Pr = less_fn, class A = allocator>
+        template <class V, class Pr>
         class linear_multiset {};
-        template <class T, class Hash = hash_fn, class Eq = equal_fn, class A = allocator>
+        template <class T, class Hash = hash_fn, class Eq = equal_to_fn, class A = allocator>
         class hash_set {};
-        template <class T, class Hash = hash_fn, class Eq = equal_fn, class A = allocator>
+        template <class T, class Hash = hash_fn, class Eq = equal_to_fn, class A = allocator>
         class hash_multiset {};
     } // namespace core
 } // namespace azuik

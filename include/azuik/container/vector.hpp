@@ -3,6 +3,7 @@
 #include <azuik/core/allocator.hpp>
 #include <azuik/container/iterable.hpp>
 #include <azuik/algorithm/functional.hpp>
+#include <azuik/algorithm/sequential.hpp>
 #include <algorithm>
 namespace azuik
 {
@@ -227,12 +228,12 @@ namespace azuik
             template <class Key>
             auto constexpr find(Key const& key) const noexcept -> const_iterator
             {
-                return find_sorted(begin(), end(), key, comp_ref());
+                return core::find_sorted(begin(), end(), key, comp_ref());
             }
             template <class Key>
             auto constexpr find(Key const& key) noexcept -> iterator
             {
-                return find_sorted(begin(), end(), key, comp_ref());
+                return core::find_sorted(begin(), end(), key, comp_ref());
             }
             template <class Key>
             auto constexpr erase(Key const& key) -> size_type
