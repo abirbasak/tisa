@@ -2,7 +2,7 @@
 #define AZUIK_CONTAINER_SET_HPP
 #include <azuik/algorithm/functional.hpp>
 #include <azuik/core/allocator.hpp>
-#include <vector>
+#include <azuik/container/vector.hpp>
 namespace azuik
 {
     namespace core
@@ -13,24 +13,36 @@ namespace azuik
         };
         template <class T, class Pr = less_fn, class A = allocator>
         class tree_multiset {};
-        template <class T, class Pr = less_fn, class A = allocator>
-        class linear_set : private Pr {
+
+        template <class V, class Pr = less_fn>
+        class linear_set;
+
+        template <class V, class Pr>
+        struct ordered_iterable_traits<linear_set<V, Pr>> : ordered_traits_from_sequence<V, Pr> {};
+        template <class V, class Pr>
+        struct sequence_traits<linear_set<V, Pr>> {
+            using allocator_type = core::allocator_type<V>;
+        };
+        template <class V, class Pr>
+        class linear_set : private assoc_vector<V, Pr> {
         private:
-            using storage_type = std::vector<T, A>;
+            using base_type = assoc_vector<V, Pr>;
 
         public:
             using self_type = linear_set;
-            using value_compare = Pr;
-            using allocator_type = storage_type::allocator_type;
-            using value_type = storage_type::value_type;
-            using difference_type = storage_type::difference_type;
-            using size_type = storage_type::size_type;
-            using reference = storage_type::reference;
-            using const_reference = storage_type::const_reference;
-            using pointer = storage_type::pointer;
-            using const_pointer = storage_type::const_pointer;
-            using iterator = storage_type::iterator;
-            using const_iterator = storage_type::const_iterator;
+
+            using allocator_type = core::allocator_type<self_type>;
+            using value_type = core::value_type<self_type>;
+            using difference_type = core::difference_type<self_type>;
+            using size_type = core::size_type<self_type>;
+            using reference = core::reference<self_type>;
+            using const_reference = core::const_reference<self_type>;
+            using pointer = core::pointer<self_type>;
+            using const_pointer = core::const_pointer<self_type>;
+            using iterator = core::iterator<self_type>;
+            using const_iterator = core::const_iterator<self_type>;
+            using key_compare = core::key_cpmpare<self_type>;
+            using key_type = core::key_type<self_type>;
 
         public:
             linear_set(value_compare const& comp = {})
