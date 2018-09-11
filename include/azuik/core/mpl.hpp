@@ -583,6 +583,12 @@ namespace azuik
         };
 
         template <class S>
+        struct ordered_iterable_traits : iterable_traits<S> {
+            using key_type = typename S::key_type;
+            using key_compare = typename S::key_compare;
+        };
+
+        template <class S>
         struct sequence_traits;
 
         template <class S>
@@ -614,6 +620,12 @@ namespace azuik
 
         template <class I>
         using const_iterator = typename iterable_traits<I>::const_iterator;
+
+        template <class I>
+        using key_type = typename ordered_iterable_traits<I>::key_type;
+
+        template <class I>
+        using key_compare = typename ordered_iterable_traits<I>::key_compare;
 
     } // namespace core
     namespace mpl

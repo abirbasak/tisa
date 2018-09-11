@@ -17,13 +17,6 @@ namespace azuik
         class iterable {};
 
         template <class C>
-        struct ordered_iterable_traits : iterable_traits<C> {
-            using key_type = typename C::key_type;
-            using mapped_type = typename C::mapped_type;
-            using key_compare = typename C::key_compare;
-        };
-
-        template <class C>
         struct unordered_iterable_traits : iterable_traits<C> {
             using key_type = typename C::key_type;
             using mapped_type = typename C::mapped_type;
