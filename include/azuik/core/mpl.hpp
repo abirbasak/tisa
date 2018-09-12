@@ -589,7 +589,9 @@ namespace azuik
         };
 
         template <class S>
-        struct sequence_traits;
+        struct sequence_traits {
+            using allocator_type = typename S::allocator_type;
+        };
 
         template <class S>
         using allocator_type = typename sequence_traits<S>::allocator_type;

@@ -158,7 +158,7 @@ namespace azuik
         class assoc_vector;
 
         template <class V, class Comp>
-        struct iterable_traits<assoc_vector<V, Comp>> : iterable_traits_from_sequence<V> {
+        struct iterable_traits<assoc_vector<V, Comp>> : public iterable_traits_from_sequence<V> {
             using iterator = core::iterator<V>;
             using const_iterator = core::const_iterator<V>;
         };
@@ -187,7 +187,12 @@ namespace azuik
             using key_compare = Comp;
 
         public:
-            explicit assoc_vector(key_compare const& comp, allocator_type const& a = {}) noexcept
+            constexpr explicit assoc_vector(allocator_type const& a = {})
+                : base_type{a}
+                , key_compare{}
+            {}
+            constexpr explicit assoc_vector(key_compare const& comp,
+                                            allocator_type const& a = {}) noexcept
                 : base_type{a}
                 , key_compare{comp}
             {}
@@ -246,15 +251,24 @@ namespace azuik
                 erase(pos);
                 return 1;
             }
+            auto constexpr key_comp() const noexcept -> key_compare
+            {
+                return static_cast<key_compare const&>(*this);
+            }
 
         public:
+            using base_type::get_allocator;
+
             using base_type::begin;
-            using base_type::clear;
-            using base_type::empty;
             using base_type::end;
+
+            using base_type::empty;
+            using base_type::size;
+            using base_type::capacity;
+
             using base_type::erase;
             using base_type::reserve;
-            using base_type::size;
+            using base_type::clear;
 
         private:
             auto constexpr comp_ref() const noexcept -> key_compare const&

@@ -3,6 +3,7 @@
 #include <azuik/algorithm/functional.hpp>
 #include <azuik/core/allocator.hpp>
 #include <azuik/container/vector.hpp>
+#include <vector>
 namespace azuik
 {
     namespace core
@@ -18,15 +19,16 @@ namespace azuik
         class linear_set;
 
         template <class V, class Pr>
-        struct ordered_iterable_traits<linear_set<V, Pr>> : ordered_traits_from_sequence<V, Pr> {};
+        struct ordered_iterable_traits<linear_set<V, Pr>>
+            : ordered_traits_from_sequence<std::vector<V>, Pr> {};
         template <class V, class Pr>
         struct sequence_traits<linear_set<V, Pr>> {
-            using allocator_type = core::allocator_type<V>;
+            using allocator_type = core::allocator_type<std::vector<V>>;
         };
         template <class V, class Pr>
-        class linear_set : private assoc_vector<V, Pr> {
+        class linear_set : public assoc_vector<std::vector<V>, Pr> {
         private:
-            using base_type = assoc_vector<V, Pr>;
+            using base_type = assoc_vector<std::vector<V>, Pr>;
 
         public:
             using self_type = linear_set;
