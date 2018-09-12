@@ -85,20 +85,78 @@ namespace azuik
             using base_type::upper_bound;
 
             template <class... Args>
-            auto constexpr insert(Args&&... args) -> void
+            auto constexpr insert(Args&&... args) -> std::tuple<iterator, bool>
             {
-                base_type::insert_unique(static_cast<Args&&>(args)...);
+                return base_type::insert_unique(static_cast<Args&&>(args)...);
             }
             template <class FwdIter>
             auto constexpr insert(FwdIter first, FwdIter last) -> void
             {
-                base_type::insert_unique(first, last);
+                return base_type::insert_unique(first, last);
             }
             using base_type::erase;
             using base_type::clear;
         };
+
+        template <class V, class Pr = less_fn>
+        class linear_multiset;
+
         template <class V, class Pr>
-        class linear_multiset {};
+        struct ordered_iterable_traits<linear_multiset<V, Pr>>
+            : ordered_traits_from_sequence<V, Pr> {};
+
+        template <class V, class Pr>
+        struct sequence_traits<linear_multiset<V, Pr>> {
+            using allocator_type = core::allocator_type<V>;
+        };
+        template <class V, class Pr>
+        class linear_multiset : private assoc_vector<V, Pr> {
+        private:
+            using base_type = assoc_vector<V, Pr>;
+
+        public:
+            using self_type = linear_multiset;
+            using value_type = core::value_type<self_type>;
+            using size_type = core::size_type<self_type>;
+            using difference_tupe = core::difference_type<self_type>;
+            using reference = core::reference<self_type>;
+            using const_reference = core::const_reference<self_type>;
+            using pointer = core::pointer<self_type>;
+            using const_pointer = core::const_pointer<self_type>;
+            using iterator = core::iterator<self_type>;
+            using const_iterator = core::const_iterator<self_type>;
+            using key_type = core::key_type<self_type>;
+            using key_compare = core::key_compare<self_type>;
+
+        public:
+            using base_type::get_allocator;
+            using base_type::key_compare;
+
+            using base_type::begin;
+            using base_type::end;
+
+            using base_type::empty;
+            using base_type::size;
+            using base_type::capacity;
+
+            using base_type::find;
+            using base_type::equal_range;
+            using base_type::lower_bound;
+            using base_type::upper_bound;
+
+            template <class... Args>
+            auto constexpr insert(Args&&... args) -> std::tuple<iterator, bool>
+            {
+                return base_type::insert_equal(static_cast<Args&&>(args)...);
+            }
+            template <class FwdIter>
+            auto constexpr insert(FwdIter first, FwdIter last) -> void
+            {
+                return base_type::insert_equal(first, last);
+            }
+            using base_type::erase;
+            using base_type::clear;
+        };
         template <class T, class Hash = hash_fn, class Eq = equal_to_fn, class A = allocator>
         class hash_set {};
         template <class T, class Hash = hash_fn, class Eq = equal_to_fn, class A = allocator>
