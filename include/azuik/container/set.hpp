@@ -30,7 +30,6 @@ namespace azuik
 
         public:
             using self_type = linear_set;
-
             using allocator_type = core::allocator_type<self_type>;
             using value_type = core::value_type<self_type>;
             using difference_type = core::difference_type<self_type>;
@@ -41,29 +40,62 @@ namespace azuik
             using const_pointer = core::const_pointer<self_type>;
             using iterator = core::iterator<self_type>;
             using const_iterator = core::const_iterator<self_type>;
-            using key_compare = core::key_compare<self_type>;
             using key_type = core::key_type<self_type>;
+            using key_compare = core::key_compare<self_type>;
 
         public:
-            linear_set(key_compare const& comp = {})
-                : base_type{comp}
+            constexpr linear_set(allocator_type const& alloc = {})
+                : base_type{alloc}
+            {}
+            constexpr linear_set(key_compare const& comp, allocator_type const& alloc = {})
+                : base_type{comp, alloc}
             {}
             template <class FwdIter>
-            linear_set(FwdIter first, FwdIter last, key_compare const& comp = {})
-                : base_type{comp, first, last}
+            constexpr linear_set(FwdIter first, FwdIter last, allocator_type const& alloc = {})
+                : base_type{first, last, alloc}
+            {}
+            template <class FwdIter>
+            constexpr linear_set(FwdIter first, FwdIter last, key_compare const& comp,
+                                 allocator_type const& alloc)
+                : base_type{first, last, comp, alloc}
+            {}
+            constexpr linear_set(std::initializer_list<value_type> ilist,
+                                 allocator_type const& alloc = {})
+                : base_type{ilist, alloc}
+            {}
+            constexpr linear_set(std::initializer_list<value_type> ilist, key_compare const& comp,
+                                 allocator_type const& alloc = {})
+                : base_type{ilist, comp, alloc}
             {}
 
         public:
+            using base_type::get_allocator;
+            using base_type::key_comp;
+
             using base_type::begin;
-            using base_type::capacity;
-            using base_type::empty;
             using base_type::end;
-            using base_type::equal_range;
+
+            using base_type::empty;
+            using base_type::size;
+            using base_type::capacity;
+
             using base_type::find;
+            using base_type::equal_range;
             using base_type::lower_bound;
             using base_type::upper_bound;
 
-            using base_type::size;
+            template <class... Args>
+            auto constexpr insert(Args&&... args) -> void
+            {
+                base_type::insert_unique(static_cast<Args&&>(args)...);
+            }
+            template <class FwdIter>
+            auto constexpr insert(FwdIter first, FwdIter last) -> void
+            {
+                base_type::insert_unique(first, last);
+            }
+            using base_type::erase;
+            using base_type::clear;
         };
         template <class V, class Pr>
         class linear_multiset {};
