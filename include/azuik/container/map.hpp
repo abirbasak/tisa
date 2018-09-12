@@ -173,7 +173,7 @@ namespace azuik
             : ordered_traits_from_sequence<std::vector<std::tuple<K, V>>, Pr> {};
 
         template <class K, class V, class Pr>
-        class linear_multimap : private assoc_vector<std::vector<std::tuple<K, V>>, Pr> {
+        class linear_multimap : public assoc_vector<std::vector<std::tuple<K, V>>, Pr> {
         private:
             using base_type = assoc_vector<std::vector<std::tuple<K, V>>, Pr>;
 
@@ -184,8 +184,68 @@ namespace azuik
             using size_type = core::size_type<base_type>;
             using difference_type = core::difference_type<base_type>;
             using reference = core::reference<base_type>;
+            using const_reference = core::const_reference<self_type>;
+            using pointer = core::pointer<self_type>;
+            using const_pointer = core::const_pointer<self_type>;
+            using iterator = core::iterator<self_type>;
+            using const_iterator = core::const_iterator<self_type>;
+            using key_type = core::key_type<self_type>;
+            using key_compare = core::key_compare<self_type>;
 
         public:
+            constexpr explicit linear_multimap(allocator_type const& a = {})
+                : base_type{a}
+            {}
+            constexpr explicit linear_multimap(key_compare const& comp,
+                                               allocator_type const& a = {})
+                : base_type{a}
+            {}
+            template <class InIter>
+            constexpr linear_multimap(InIter first, InIter last, allocator_type const& a = {})
+                : base_type{first, last, a}
+            {}
+            template <class InIter>
+            constexpr linear_multimap(InIter first, InIter last, key_compare const& comp,
+                                      allocator_type const& a = {})
+                : base_type{first, last, comp, a}
+            {}
+            constexpr linear_multimap(std::initializer_list<value_type> ilist,
+                                      allocator_type const& a = {})
+                : base_type{ilist, a}
+            {}
+            constexpr linear_multimap(std::initializer_list<value_type> ilist,
+                                      key_compare const& comp, allocator_type const& a = {})
+                : base_type{ilist, comp, a}
+            {}
+
+        public:
+            using base_type::get_allocator;
+            using base_type::key_comp;
+
+            using base_type::begin;
+            using base_type::end;
+
+            using base_type::empty;
+            using base_type::size;
+            using base_type::capacity;
+
+            using base_type::find;
+            using base_type::equal_range;
+            using base_type::lower_bound;
+            using base_type::upper_bound;
+
+            template <class... Args>
+            auto constexpr insert(Args&&... args) -> std::tuple<iterator, bool>
+            {
+                return base_type::insert_equal(static_cast<Args&&>(args)...);
+            }
+            template <class InIter>
+            auto constexpr insert(InIter first, InIter last) -> void
+            {
+                return base_type::insert_equal(first, last);
+            }
+            using base_type::erase;
+            using base_type::clear;
         };
 
         template <class K, class V>
