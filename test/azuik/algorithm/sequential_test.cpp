@@ -1,6 +1,6 @@
 
 #include <azuik/algorithm/sequential.hpp>
-#include <azuik/test/unit_test.hpp>
+#include <azuik/tool/unit_test.hpp>
 #include <vector>
 AZUIK_TEST_SUIT(sequential)
 {

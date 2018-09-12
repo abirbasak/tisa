@@ -1,5 +1,5 @@
-#include <azuik/test/unit_test.hpp>
+#include <azuik/tool/unit_test.hpp>
 int main(int argc, char* argv[])
 {
-    azuik::test::execute(argc, argv);
+    azuik::tool::run_test(argc, argv);
 }
