@@ -4,6 +4,7 @@
 #include <azuik/container/tree.hpp>
 #include <azuik/container/vector.hpp>
 #include <azuik/algorithm/functional.hpp>
+#include <vector>
 #include <tuple>
 
 namespace azuik
@@ -89,9 +90,16 @@ namespace azuik
         class tree_multimap;
 
         template <class K, class V, class Pr = less_fn>
-        class linear_map : private assoc_vector<std::tuple<K, V>, Pr> {
+        class linear_map;
+
+        template <class K, class V, class Pr>
+        struct ordered_iterable_traits<linear_map<K, V, Pr>>
+            : ordered_traits_from_sequence<std::vector<std::tuple<K, V>>, Pr> {};
+
+        template <class K, class V, class Pr>
+        class linear_map : private assoc_vector<std::vector<std::tuple<K, V>>, Pr> {
         private:
-            using base_type = assoc_vector<std::tuple<K, V>, Pr>;
+            using base_type = assoc_vector<std::vector<std::tuple<K, V>>, Pr>;
 
         public:
             using self_type = linear_map;
@@ -158,9 +166,16 @@ namespace azuik
         };
 
         template <class K, class V, class Pr = less_fn>
-        class linear_multimap {
+        class linear_multimap;
+
+        template <class K, class V, class Pr>
+        struct ordered_iterable_traits<linear_multimap<K, V, Pr>>
+            : ordered_traits_from_sequence<std::vector<std::tuple<K, V>>, Pr> {};
+
+        template <class K, class V, class Pr>
+        class linear_multimap : private assoc_vector<std::vector<std::tuple<K, V>>, Pr> {
         private:
-            using base_type = std::vector<std::tuple<K, V>>;
+            using base_type = assoc_vector<std::vector<std::tuple<K, V>>, Pr>;
 
         public:
             using self_type = linear_multimap;
