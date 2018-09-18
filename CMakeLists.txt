@@ -17,3 +17,7 @@ if(TISA_BUILD_TESTS)
     add_executable(tisa-test ${TEST-SOURCES})
     target_link_libraries(tisa-test tisa rusa)
 endif()
+
+project(tisa-macro VERSION 1.0.0 LANGUAGES CXX)
+add_executable(tisa-macro tools/tisa-macro.cpp)
+target_compile_features(tisa-macro PUBLIC cxx_std_17)
