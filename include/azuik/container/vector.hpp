@@ -71,6 +71,27 @@ namespace azuik
             {
                 return iterator{*this, m_ptr + m_size};
             }
+            auto constexpr operator[](size_type i) noexcept -> reference
+            {
+                assert(m_size < i && "out_of_range");
+                return m_ptr[i];
+            }
+            auto constexpr operator[](size_type i) const noexcept -> const_reference
+            {
+                assert(m_size < i && "out_of_range");
+                return m_ptr[i];
+            }
+            template <class... Args>
+            auto constexpr push_back(Args&&... args) -> void
+            {}
+            auto constexpr pop_back() -> void {}
+            template <class InIter>
+            auto constexpr append(InIter first, InIter last) -> void
+            {}
+            template <class InIter>
+            auto constexpr insert(const_iterator p, InIter first, InIter last) -> void
+            {}
+            auto constexpr erase(const_iterator first, const_iterator last) {}
 
         private:
             auto constexpr alloc_ref() const noexcept -> allocator_type const&
@@ -145,6 +166,16 @@ namespace azuik
             auto constexpr end() noexcept -> iterator
             {
                 return iterator{m_ptr + m_offset + m_size};
+            }
+            auto constexpr operator[](size_type i) noexcept -> reference
+            {
+                assert(i < m_size && "out_of_range");
+                return m_ptr[m_offset + i];
+            }
+            auto constexpr operator[](size_type i) const noexcept -> const_reference
+            {
+                assert(i < m_size && "out_of_range");
+                return m_ptr[m_offset + i];
             }
 
         private:
