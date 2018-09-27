@@ -307,6 +307,174 @@ namespace azuik
                 return static_cast<key_compare const&>(*this);
             }
         };
+
+        template <class T, class A>
+        class stable_vector;
+
+        template <class T, class A>
+        class stable_vector : private A {
+        public:
+            using self_type = stable_vector<T, A>;
+            using allocator_type = core::allocator_type<self_type>;
+            using value_type = core::value_type<self_type>;
+            using size_type = core::size_type<self_type>;
+            using difference_type = core::difference_type<self_type>;
+            using reference = core::reference<self_type>;
+            using pointer = core::pointer<self_type>;
+            using const_reference = core::const_reference<self_type>;
+            using const_pointer = core::const_pointer<self_type>;
+            using iterator = core::iterator<self_type>;
+            using const_iterator = core::const_iterator<self_type>;
+
+        private:
+            struct sentinel_node {
+                pointer up;
+            };
+            using sentinel_ptr = core::allocator_pointer<allocator_type, sentinel_node>;
+            struct node;
+            using node_ptr = core::allocator_pointer<allocator_type, node>;
+            using node_cptr = core::allocator_const_pointer<allocator_type, node>;
+
+            struct node : sentinel_node {
+                template <class... Args>
+                node(std::in_place_t, pointer up, Args&&... args)
+                    : sentinel_node{up}
+                    , value{static_cast<Args&&>(args)...}
+                {}
+
+                template <class... Args>
+                static auto make(allocator_type& a, Args&&... args, node_ptr up) -> node_ptr
+                {
+                    node_ptr np =
+                        core::allocate_and_construct<node>(a, static_cast<Args&&>(args)...);
+                    np->up = up;
+                    return np;
+                }
+                static void drop(allocator_type& a, node_cptr p)
+                {
+                    core::destroy(p);
+                    a.deallocate(p);
+                }
+                value_type value;
+            };
+
+            using index_type = std::vector<node_ptr>;
+            using index_iterator = core::iterator<index_type>;
+
+        public:
+            explicit stable_vector(allocator_type const& a = {});
+
+            ~stable_vector()
+            {
+                clear();
+                drop_sentinel();
+            }
+
+            auto constexpr begin() noexcept -> iterator
+            {
+                return iterator{*m_indices.begin()};
+            }
+            auto constexpr end() noexcept -> iterator
+            {
+                return iterator{*std::prev(m_indices.end())};
+            }
+            auto constexpr begin() const noexcept -> const_iterator
+            {
+                return const_iterator{*m_indices.begin()};
+            }
+            auto constexpr end() const noexcept -> const_iterator
+            {
+                return const_iterator{*std::prev(m_indices.back())};
+            }
+            auto constexpr get_allocator() const noexcept -> allocator_type
+            {
+                return static_cast<allocator_type const&>(*this);
+            }
+            auto constexpr size() const noexcept
+            {
+                return m_indices.size() - 1;
+            }
+            auto constexpr capacity() const noexcept
+            {
+                return m_indices.capacity() - 1;
+            }
+            auto constexpr empty() const noexcept -> bool
+            {
+                return m_indices.size() == 1;
+            }
+            auto constexpr operator[](size_type n) noexcept -> reference
+            {
+                return m_indices[n]->value;
+            }
+            auto constexpr operator[](size_type n) const noexcept -> const_reference
+            {
+                return m_indices[n]->value;
+            }
+            template <class... Args>
+            void push_back(Args&&... args)
+            {
+                insert(end(), static_cast<Args&&>(args)...);
+            }
+            void pop_back()
+            {
+                erase(std::prev(end()));
+            }
+            auto constexpr erase(const_iterator p) -> iterator
+            {
+                difference_type offset = p - begin();
+                auto it = m_indices.begin() + offset;
+                node::drop(*it);
+                m_indices.erase(it);
+                reindex(m_indices.begin() + offset, m_indices.end());
+                return begin() + offset;
+            }
+
+            auto constexpr erase(const_iterator first, const_iterator last) -> iterator
+            {
+                difference_type offset1 = first - begin();
+                difference_type offset2 = last - begin();
+                auto it1 = m_indices.begin() + offset1;
+                auto it2 = m_indices.begin() + offset2;
+                for (auto it = it1; it != it2; ++it)
+                {
+                    node::drop(*it);
+                }
+                m_indices.erase(it1, it2);
+                reindex(m_indices.begin() + offset1, m_indices.end());
+                return begin() + offset1;
+            }
+            auto constexpr clear() -> void
+            {
+                erase(begin(), end());
+            }
+
+        private:
+            auto constexpr alloc_ref() noexcept -> allocator_type&
+            {
+                return static_cast<allocator_type&>(*this);
+            }
+            void make_sentinel()
+            {
+                node_ptr p = alloc_ref().allocate(1);
+                m_indices.back() = p;
+                p->up = &m_indices.back();
+            }
+
+            void drop_sentinel()
+            {
+                alloc_ref().deallocate(static_cast<sentinel_ptr>(m_indices.back()));
+            }
+            static auto constexpr reindex(index_iterator first, index_iterator last) noexcept
+            {
+                for (; first != last; ++first)
+                {
+                    (*first)->up = &*first;
+                }
+            }
+
+        private:
+            index_type m_indices;
+        };
     } // namespace core
 } // namespace azuik
 #endif
