@@ -8,8 +8,8 @@ namespace azuik
     namespace core
     {
         struct for_each_iter_fn {
-            template <class InIter, class Fn>
-            void operator()(InIter f, InIter l, Fn fn) const noexcept
+            template <class InIter, class Sentinel, class Fn>
+            void operator()(InIter f, Sentinel l, Fn fn) const noexcept
             {
                 for (; f != l; ++f)
                 {
