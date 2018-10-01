@@ -132,6 +132,9 @@ namespace azuik
             function_type m_fn;
         };
 
+        template <class S>
+        using constant_view = range_view<add_const<S>>;
+
     } // namespace core
 
 } // namespace azuik
