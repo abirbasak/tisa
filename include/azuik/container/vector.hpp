@@ -142,7 +142,7 @@ namespace azuik
             }
             ~vector()
             {
-                core::destroy_range(this->m_ptr, this->m_ptr + this->m_size);
+                core::destroy_n(this->m_ptr, this->m_size);
             }
             auto constexpr get_allocator() const noexcept -> allocator_type
             {
@@ -219,7 +219,7 @@ namespace azuik
             }
             auto constexpr clear() noexcept -> void
             {
-                core::destroy_range(this->m_ptr, this->m_ptr + this->m_size);
+                core::destroy_n(this->m_ptr, this->m_size);
                 this->m_size = 0;
             }
 
@@ -265,10 +265,25 @@ namespace azuik
             {
                 auto ptr = base_type::allocate(n);
                 core::uninitialized_safe_move(this->m_ptr, this->m_ptr + this->m_size, ptr);
-                core::destroy_range(this->m_ptr, this->m_ptr + this->m_size);
+                core::destroy_n(this->m_ptr, this->m_size);
                 base_type::deallocate(this->m_ptr, this->m_size);
                 this->m_ptr = ptr;
                 this->m_size = this->m_capacity = n;
+            }
+            void assign_n(size_type n, value_type const& x)
+            {
+                if (n > this->m_size)
+                {
+                    std::fill_n(this->m_ptr, this->m_size, x);
+                    core::uninitialized_fill_n(this->m_ptr + this->m_size, n - this->m_size, x);
+                    this->m_size = n;
+                }
+                else
+                {
+                    std::fill_n(this->m_ptr, n, x);
+                    core::destroy_n(this->m_ptr + this->m_size, this->m_size - n);
+                    this->m_size = n;
+                }
             }
         };
 
