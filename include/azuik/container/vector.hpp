@@ -23,8 +23,70 @@ namespace azuik
             using allocator_type = A;
         };
 
+        namespace detail_
+        {
+            template <class T, class A>
+            struct vector_base : private A {
+                using allocator_type = A;
+                using size_type = core::allocator_size<T, A>;
+                using value_type = core::allocator_value<T, A>;
+                using pointer = core::allocator_pointer<T, A>;
+
+                constexpr vector_base(allocator_type const& a = {}) noexcept
+                    : allocator_type{a}
+                    , m_ptr{nullptr}
+                    , m_capacity{0}
+                    , m_size{0}
+                {}
+                constexpr vector_base(size_type n, allocator_type const& a = {})
+                    : allocator_type{a}
+                {
+                    m_ptr = allocate(n);
+                    m_capacity = n;
+                    m_size = 0;
+                }
+                ~vector_base()
+                {
+                    deallocate(m_ptr, m_capacity);
+                }
+                auto constexpr allocate(size_type n) -> pointer
+                {
+                    return alloc_ref().template allocate<value_type>(n);
+                }
+                auto constexpr deallocate(pointer p, size_type n) -> void
+                {
+                    return alloc_ref().template deallocate<value_type>(m_ptr, n);
+                }
+                auto constexpr alloc_ref() noexcept
+                {
+                    return static_cast<allocator_type&>(*this);
+                }
+                auto constexpr alloc_ref() const noexcept
+                {
+                    return static_cast<allocator_type const&>(*this);
+                }
+                auto constexpr capacity() const noexcept
+                {
+                    return m_capacity;
+                }
+                auto constexpr size() const noexcept
+                {
+                    return m_size;
+                }
+                auto swap(vector_base& that) noexcept
+                {
+                    std::swap(m_ptr, that.m_ptr);
+                    std::swap(m_capacity, that.m_capacity);
+                    std::swap(m_size, that.m_size);
+                }
+                pointer m_ptr;
+                size_type m_capacity;
+                size_type m_size;
+            };
+
+        } // namespace detail_
         template <class T, class A>
-        class vector : private A {
+        class vector : private detail_::vector_base<T, A> {
         public:
             using self_type = vector;
             using allocator_type = core::allocator_type<self_type>;
@@ -38,30 +100,57 @@ namespace azuik
             using iterator = core::iterator<self_type>;
             using const_iterator = core::const_iterator<self_type>;
 
+        private:
+            template <class>
+            friend class detail_::contiguous_policy;
+            using base_type = detail_::vector_base<T, A>;
+            using node_ptr = pointer;
+            using node_cptr = const_pointer;
+
         public:
+            explicit constexpr vector(allocator_type const& a = {}) noexcept
+                : base_type{a}
+            {}
+            explicit constexpr vector(size_type n, allocator_type const& a = {})
+                : base_type{n, a}
+            {
+                core::uninitialized_value_construct_n(m_ptr, n);
+                m_size = m_capacity = n;
+            }
+            explicit constexpr vector(size_type n, value_type const& x,
+                                      allocator_type const& a = {})
+                : base_type{n, a}
+            {
+                core::uninitialized_fill_n(m_ptr, n, x);
+                m_size = m_capacity = n;
+            }
+            template <class InIter>
+            constexpr vector(InIter first, InIter last, allocator_type const& a = {})
+                : base_type{a}
+            {}
             auto constexpr get_allocator() const noexcept -> allocator_type
             {
-                return static_cast<allocator_type>(*this);
+                return base_type::alloc_ref();
             }
             auto constexpr capacity() const noexcept -> size_type
             {
-                return m_capacity;
+                return base_type::capacity();
             }
             auto constexpr size() const noexcept -> size_type
             {
-                return m_size;
+                return base_type::size();
             }
             auto constexpr empty() const noexcept -> bool
             {
-                return m_size == 0;
+                return base_type::size() == 0;
             }
             auto constexpr begin() const noexcept -> const_iterator
             {
-                return const_iterator{*this, m_ptr};
+                return const_iterator{*this, static_cast<node_ptr>(m_ptr)};
             }
             auto constexpr end() const noexcept -> const_iterator
             {
-                return const_iterator{*this, m_ptr + m_size};
+                return const_iterator{*this, static_cast<node_ptr>(m_ptr) + m_size};
             }
             auto constexpr begin() noexcept -> iterator
             {
@@ -88,10 +177,64 @@ namespace azuik
             template <class InIter>
             auto constexpr append(InIter first, InIter last) -> void
             {}
+            template <class... Args>
+            auto constexpr insert(const_iterator p, Args&&... args) -> iterator
+            {
+                throw;
+            }
             template <class InIter>
             auto constexpr insert(const_iterator p, InIter first, InIter last) -> void
             {}
             auto constexpr erase(const_iterator first, const_iterator last) {}
+            auto constexpr erase(const_iterator p) -> iterator
+            {
+                throw;
+            }
+            template <class InIter>
+            void assign(InIter first, InIter last)
+            {}
+            void assign(size_type n, value_type const& x) {}
+            void reserve(size_type n)
+            {
+                if (n > m_capacity)
+                {
+                    resize_memory(n);
+                }
+            }
+            auto constexpr clear() noexcept -> void
+            {
+                core::destroy_range(m_ptr, m_ptr + m_size);
+                m_size = 0;
+            }
+
+            void swap(self_type& that) noexcept
+            {
+                base_type::swap(static_cast<base_type&>(that));
+            }
+            auto constexpr operator==(self_type const& that) const noexcept -> bool
+            {
+                return ((size() == that.size()) && std::equal(begin(), end(), that.begin()));
+            }
+            auto constexpr operator!=(self_type const& that) const noexcept -> bool
+            {
+                return ((size() != that.size()) || !std::equal(begin(), end(), that.begin()));
+            }
+            auto constexpr operator<(self_type const& that) const noexcept -> bool
+            {
+                return std::lexicographical_compare(begin(), end(), that.begin(), that.end());
+            }
+            auto constexpr operator>(self_type const& that) const noexcept -> bool
+            {
+                return that < (*this);
+            }
+            auto constexpr operator<=(self_type const& that) const noexcept -> bool
+            {
+                return !(that < (*this));
+            }
+            auto constexpr operator>=(self_type const& that) const noexcept -> bool
+            {
+                return !((*this) < that);
+            }
 
         private:
             auto constexpr alloc_ref() const noexcept -> allocator_type const&
@@ -101,6 +244,15 @@ namespace azuik
             auto constexpr alloc_ref() noexcept -> allocator_type&
             {
                 return static_cast<allocator_type&>(*this);
+            }
+            void resize_memory(size_type n)
+            {
+                auto ptr = base_type::allocate(n);
+                core::uninitialized_safe_move(m_ptr, m_ptr + m_size, ptr);
+                core::destroy_range(m_ptr, m_ptr + m_size);
+                base_type::deallocate(m_ptr, m_size);
+                m_ptr = ptr;
+                m_size = m_capacity = n;
             }
 
         private:
