@@ -128,6 +128,22 @@ namespace azuik
             constexpr vector(InIter first, InIter last, allocator_type const& a = {})
                 : base_type{a}
             {}
+            vector(self_type const& that)
+                : base_type{that.size(), that.get_allocator()}
+            {
+                core::uninitialized_copy_n(that.m_ptr, that.m_size, this->m_ptr);
+                this->m_size = that.m_size;
+            }
+            vector(self_type const& that, allocator_type const& a)
+                : base_type{that.size(), a}
+            {
+                core::uninitialized_copy_n(that.m_ptr, that.m_size, this->m_ptr);
+                this->m_size = that.m_size;
+            }
+            ~vector()
+            {
+                core::destroy_range(this->m_ptr, this->m_ptr + this->m_size);
+            }
             auto constexpr get_allocator() const noexcept -> allocator_type
             {
                 return base_type::alloc_ref();
