@@ -75,6 +75,24 @@ namespace azuik
             }
         } const source = {};
 
+        struct front_fn {
+            template <class S>
+            auto constexpr operator()(S&& s) const noexcept
+            {
+                return *begin(static_cast<S&&>(s));
+            }
+        };
+        inline static constexpr const front_fn front = {};
+
+        struct back_fn {
+            template <class S>
+            auto constexpr operator()(S&& s) const noexcept
+            {
+                return *(--end(static_cast<S&&>(s)));
+            }
+        };
+        inline static constexpr const back_fn back = {};
+
         template <class S, class Policy>
         class standard_iterator : public Policy {
         private:
