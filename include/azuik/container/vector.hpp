@@ -114,15 +114,15 @@ namespace azuik
             explicit constexpr vector(size_type n, allocator_type const& a = {})
                 : base_type{n, a}
             {
-                core::uninitialized_value_construct_n(m_ptr, n);
-                m_size = m_capacity = n;
+                core::uninitialized_value_construct_n(this->m_ptr, n);
+                this->m_size = this->m_capacity = n;
             }
             explicit constexpr vector(size_type n, value_type const& x,
                                       allocator_type const& a = {})
                 : base_type{n, a}
             {
-                core::uninitialized_fill_n(m_ptr, n, x);
-                m_size = m_capacity = n;
+                core::uninitialized_fill_n(this->m_ptr, n, x);
+                this->m_size = this->m_capacity = n;
             }
             template <class InIter>
             constexpr vector(InIter first, InIter last, allocator_type const& a = {})
@@ -146,29 +146,29 @@ namespace azuik
             }
             auto constexpr begin() const noexcept -> const_iterator
             {
-                return const_iterator{*this, static_cast<node_ptr>(m_ptr)};
+                return const_iterator{*this, static_cast<node_ptr>(this->m_ptr)};
             }
             auto constexpr end() const noexcept -> const_iterator
             {
-                return const_iterator{*this, static_cast<node_ptr>(m_ptr) + m_size};
+                return const_iterator{*this, static_cast<node_ptr>(this->m_ptr) + this->m_size};
             }
             auto constexpr begin() noexcept -> iterator
             {
-                return iterator{*this, m_ptr};
+                return iterator{*this, this->m_ptr};
             }
             auto constexpr end() noexcept -> iterator
             {
-                return iterator{*this, m_ptr + m_size};
+                return iterator{*this, this->m_ptr + this->m_size};
             }
             auto constexpr operator[](size_type i) noexcept -> reference
             {
-                assert(m_size < i && "out_of_range");
-                return m_ptr[i];
+                assert(this->m_size < i && "out_of_range");
+                return this->m_ptr[i];
             }
             auto constexpr operator[](size_type i) const noexcept -> const_reference
             {
-                assert(m_size < i && "out_of_range");
-                return m_ptr[i];
+                assert(this->m_size < i && "out_of_range");
+                return this->m_ptr[i];
             }
             template <class... Args>
             auto constexpr push_back(Args&&... args) -> void
@@ -196,15 +196,15 @@ namespace azuik
             void assign(size_type n, value_type const& x) {}
             void reserve(size_type n)
             {
-                if (n > m_capacity)
+                if (n > this->m_capacity)
                 {
                     resize_memory(n);
                 }
             }
             auto constexpr clear() noexcept -> void
             {
-                core::destroy_range(m_ptr, m_ptr + m_size);
-                m_size = 0;
+                core::destroy_range(this->m_ptr, this->m_ptr + this->m_size);
+                this->m_size = 0;
             }
 
             void swap(self_type& that) noexcept
@@ -248,17 +248,12 @@ namespace azuik
             void resize_memory(size_type n)
             {
                 auto ptr = base_type::allocate(n);
-                core::uninitialized_safe_move(m_ptr, m_ptr + m_size, ptr);
-                core::destroy_range(m_ptr, m_ptr + m_size);
-                base_type::deallocate(m_ptr, m_size);
-                m_ptr = ptr;
-                m_size = m_capacity = n;
+                core::uninitialized_safe_move(this->m_ptr, this->m_ptr + this->m_size, ptr);
+                core::destroy_range(this->m_ptr, this->m_ptr + this->m_size);
+                base_type::deallocate(this->m_ptr, this->m_size);
+                this->m_ptr = ptr;
+                this->m_size = this->m_capacity = n;
             }
-
-        private:
-            pointer m_ptr;
-            size_type m_size;
-            size_type m_capacity;
         };
 
         template <class T, class A = allocator>
