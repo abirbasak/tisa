@@ -28,33 +28,28 @@ namespace azuik
         } const construct{};
 
         struct destroy_fn {
-            template <class T>
-            enable_if<is_trivially_destructible<T>, void> operator()(T* p) const
-            {}
-            template <class T>
-            disable_if<is_trivially_destructible<T>, void> operator()(T* p) const
+            template <class InIter>
+            auto constexpr operator()(InIter first, InIter last) const noexcept -> void
             {
-                (*p).~T();
+                return std::destroy(first, last);
             }
-        } const destroy{};
+            template <class Ptr>
+            auto constexpr operator()(Ptr p) const noexcept -> void
+            {
+                return std::destroy_at(p);
+            }
+        };
+        inline constexpr destroy_fn destroy = {};
 
-        struct destroy_range_fn {
-            template <class InIter,
-                      enable_if<core::is_trivially_destructible<core::value_type<InIter>>, int> = 0>
-            void operator()(InIter, InIter) const noexcept
-            {}
-            template <class InIter,
-                      core::disable_if<core::is_trivially_destructible<core::value_type<InIter>>,
-                                       int> = 0>
-            void operator()(InIter first, InIter last) const noexcept
+        struct destroy_n_fn {
+            template <class FwdIter, class Size>
+            auto constexpr operator()(FwdIter first, Size n) const noexcept -> FwdIter
             {
-                using T = value_type<InIter>;
-                for (; first != last; ++first)
-                {
-                    (*first).~T();
-                }
+                return std::destroy_n(first, n);
             }
-        } const destroy_range{};
+        };
+
+        inline constexpr destroy_n_fn destroy_n = {};
 
         struct uninitialized_fill_fn {
             template <class InIter, class T>
