@@ -115,7 +115,7 @@ namespace azuik
         private:
             template <class... Args>
             constexpr explicit standard_iterator(S& s, Args&&... args) noexcept
-                : base_type{&s, static_cast<Args&&>(args)...}
+                : base_type{const_cast<remove_const<S>*>(&s), static_cast<Args&&>(args)...}
             {}
 
         public:
@@ -167,6 +167,14 @@ namespace azuik
                 base_type::decrement(n);
                 return *this;
             }
+            auto constexpr operator-(difference_type n) const noexcept
+            {
+                return self_type{*this} -= n;
+            }
+            auto constexpr operator+(difference_type n) const noexcept
+            {
+                return self_type{*this} += n;
+            }
             auto constexpr operator-(self_type const& that) const noexcept
             {
                 return base_type::distance(that);
@@ -196,14 +204,13 @@ namespace azuik
             public:
                 using node_ptr = typename S::node_ptr;
                 using iterator_category = std::forward_iterator_tag;
-                using value_type = core::value_type<S>;
-                using nonconst_self = forward_policy<remove_const<S>>;
+                using reference = core::reference<S>;
 
                 constexpr explicit forward_policy(S*, node_ptr ptr) noexcept
                     : m_ptr{ptr}
                 {}
 
-                constexpr auto deref() const noexcept -> value_type
+                constexpr auto deref() const noexcept -> reference
                 {
                     return (*m_ptr).value();
                 }
@@ -227,15 +234,15 @@ namespace azuik
             public:
                 using node_ptr = typename S::node_ptr;
                 using iterator_category = std::bidirectional_iterator_tag;
-                using value_type = core::value_type<S>;
+                using reference = core::reference<S>;
 
                 constexpr explicit bidirectional_policy(S*, node_ptr ptr) noexcept
                     : m_ptr{ptr}
                 {}
 
-                constexpr auto deref() const noexcept -> value_type
+                constexpr auto deref() const noexcept -> reference
                 {
-                    return *m_ptr;
+                    return (*m_ptr).value();
                 }
                 constexpr auto increment() noexcept
                 {
@@ -260,12 +267,17 @@ namespace azuik
             struct contiguous_policy {
                 using iterator_category = std::random_access_iterator_tag;
                 using difference_type = core::difference_type<S>;
-                using node_ptr = typename S::node_cptr;
+                using node_ptr = typename S::node_ptr;
+                using reference = core::reference<S>;
 
             public:
                 constexpr explicit contiguous_policy(S* s, node_ptr ptr) noexcept
                     : m_ptr{ptr}
                 {}
+                constexpr auto deref() const noexcept -> reference
+                {
+                    return *m_ptr;
+                }
                 constexpr auto increment() noexcept
                 {
                     ++m_ptr;
@@ -287,10 +299,7 @@ namespace azuik
                 {
                     return m_ptr - that.m_ptr;
                 }
-                constexpr auto deref() const noexcept
-                {
-                    return *m_ptr;
-                }
+
                 template <class That>
                 constexpr auto equal(That const& that) const noexcept
                 {
