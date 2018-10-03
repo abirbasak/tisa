@@ -1,7 +1,7 @@
 #ifndef AZUIK_CONTAINER_VECTOR_HPP
 #define AZUIK_CONTAINER_VECTOR_HPP
 #include <azuik/core/allocator.hpp>
-#include <azuik/container/iterable.hpp>
+#include <azuik/container/iterator.hpp>
 #include <azuik/algorithm/functional.hpp>
 #include <azuik/algorithm/sequential.hpp>
 #include <algorithm>
@@ -124,10 +124,12 @@ namespace azuik
                 core::uninitialized_fill_n(this->m_ptr, n, x);
                 this->m_size = n;
             }
-            template <class InIter>
+            template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             constexpr vector(InIter first, InIter last, allocator_type const& a = {})
                 : base_type{a}
-            {}
+            {
+                append(first, last);
+            }
             vector(self_type const& that)
                 : base_type{that.size(), that.get_allocator()}
             {
@@ -190,9 +192,16 @@ namespace azuik
             auto constexpr push_back(Args&&... args) -> void
             {}
             auto constexpr pop_back() -> void {}
-            template <class InIter>
+            template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             auto constexpr append(InIter first, InIter last) -> void
-            {}
+            {
+                append(first, last, core::iterator_category<InIter>{});
+            }
+            template <class FwdIter>
+            auto constexpr append(FwdIter first, size_type n) -> void
+            {
+                append_n(first, n);
+            }
             template <class... Args>
             auto constexpr insert(const_iterator p, Args&&... args) -> iterator
             {
@@ -201,12 +210,15 @@ namespace azuik
             template <class InIter>
             auto constexpr insert(const_iterator p, InIter first, InIter last) -> void
             {}
-            auto constexpr erase(const_iterator first, const_iterator last) {}
-            auto constexpr erase(const_iterator p) -> iterator
+            auto constexpr erase(const_iterator first, const_iterator last) -> iterator
             {
                 throw;
             }
-            template <class InIter>
+            auto constexpr erase(const_iterator p) -> iterator
+            {
+                return erase(p, std::next(p));
+            }
+            template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             void assign(InIter first, InIter last)
             {}
             void assign(size_type n, value_type const& x) {}
@@ -284,6 +296,30 @@ namespace azuik
                     core::destroy_n(this->m_ptr + this->m_size, this->m_size - n);
                     this->m_size = n;
                 }
+            }
+            template <class InIter>
+            void append(InIter first, InIter last, std::input_iterator_tag)
+            {
+                for (; first != last; ++first)
+                {
+                    push_back(*first);
+                }
+            }
+            template <class FwdIter>
+            void append(FwdIter first, FwdIter last, std::forward_iterator_tag)
+            {
+                auto n = std::distance(first, last);
+                append_n(first, n);
+            }
+            template <class FwdIter>
+            void append_n(FwdIter first, size_type n)
+            {
+                if (this->m_capacity - this->m_size < n)
+                {
+                    reserve(std::max(this->m_size + n, 2 * this->m_size));
+                }
+                core::uninitialized_copy_n(first, n, this->m_ptr + this->m_size);
+                this->m_size += n;
             }
         };
 
