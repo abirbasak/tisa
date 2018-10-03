@@ -115,14 +115,14 @@ namespace azuik
                 : base_type{n, a}
             {
                 core::uninitialized_value_construct_n(this->m_ptr, n);
-                this->m_size = this->m_capacity = n;
+                this->m_size = n;
             }
             explicit constexpr vector(size_type n, value_type const& x,
                                       allocator_type const& a = {})
                 : base_type{n, a}
             {
                 core::uninitialized_fill_n(this->m_ptr, n, x);
-                this->m_size = this->m_capacity = n;
+                this->m_size = n;
             }
             template <class InIter>
             constexpr vector(InIter first, InIter last, allocator_type const& a = {})
