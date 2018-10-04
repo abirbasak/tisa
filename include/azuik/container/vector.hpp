@@ -232,6 +232,28 @@ namespace azuik
                     resize_memory(n);
                 }
             }
+            void resize(size_type n)
+            {
+                if (n < this->m_size)
+                {
+                    erase(begin() + n, end());
+                }
+                else
+                {
+                    append_n(n - this->m_size, value_type{});
+                }
+            }
+            void resize(size_type n, value_type const& x)
+            {
+                if (n < this->m_size)
+                {
+                    erase(begin() + n, end());
+                }
+                else
+                {
+                    append_n(n - this->m_size, x);
+                }
+            }
             auto constexpr clear() noexcept -> void
             {
                 core::destroy_n(this->m_ptr, this->m_size);
