@@ -75,27 +75,27 @@ namespace azuik
                 static_cast<base_type&>(*this) = static_cast<base_type const&>(that);
                 return *this;
             }
-            auto constexpr operator*() const noexcept
+            auto constexpr operator*() const noexcept -> reference
             {
                 return base_type::deref();
             }
-            auto constexpr operator++() noexcept
+            auto constexpr operator++() noexcept -> standard_iterator&
             {
                 base_type::increment();
                 return *this;
             }
-            auto constexpr operator--() noexcept
+            auto constexpr operator--() noexcept -> standard_iterator&
             {
                 base_type::decrement();
                 return *this;
             }
-            auto constexpr operator++(int) noexcept
+            auto constexpr operator++(int) noexcept -> standard_iterator
             {
                 self_type temp{*this};
                 ++(*this);
                 return temp;
             }
-            auto constexpr operator--(int) noexcept
+            auto constexpr operator--(int) noexcept -> standard_iterator
             {
                 self_type temp{*this};
                 --(*this);
