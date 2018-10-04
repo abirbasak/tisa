@@ -212,7 +212,10 @@ namespace azuik
             {}
             auto constexpr erase(const_iterator first, const_iterator last) -> iterator
             {
-                throw;
+                auto p = std::move(last.get_node(), this->m_ptr + this->m_size, first.get_node());
+                core::destroy(p, this->m_ptr + this->m_size);
+                this->m_size = p - this->m_ptr;
+                return iterator{*this, first.get_node()};
             }
             auto constexpr erase(const_iterator p) -> iterator
             {
