@@ -180,18 +180,29 @@ namespace azuik
             }
             auto constexpr operator[](size_type i) noexcept -> reference
             {
-                assert(this->m_size < i && "out_of_range");
+                assert(i < this->m_size && "out_of_range");
                 return this->m_ptr[i];
             }
             auto constexpr operator[](size_type i) const noexcept -> const_reference
             {
-                assert(this->m_size < i && "out_of_range");
+                assert(i < this->m_size && "out_of_range");
                 return this->m_ptr[i];
             }
             template <class... Args>
             auto constexpr push_back(Args&&... args) -> void
-            {}
-            auto constexpr pop_back() -> void {}
+            {
+                if (this->m_capacity == this->m_size)
+                {
+                    reserve(2 * this->m_size + 1);
+                }
+                core::construct(this->m_ptr + this->m_size, static_cast<Args&&>(args)...);
+                ++this->m_size;
+            }
+            auto constexpr pop_back() noexcept -> void
+            {
+                core::destroy(this->m_ptr + this->m_size - 1);
+                --this->m_size;
+            }
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             auto constexpr append(InIter first, InIter last) -> void
             {
@@ -305,7 +316,7 @@ namespace azuik
                 core::destroy_n(this->m_ptr, this->m_size);
                 base_type::deallocate(this->m_ptr, this->m_size);
                 this->m_ptr = ptr;
-                this->m_size = this->m_capacity = n;
+                this->m_capacity = n;
             }
             void assign_n(size_type n, value_type const& x)
             {
