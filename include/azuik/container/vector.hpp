@@ -142,9 +142,31 @@ namespace azuik
                 core::uninitialized_copy_n(that.m_ptr, that.m_size, this->m_ptr);
                 this->m_size = that.m_size;
             }
+            vector(self_type&& that) noexcept
+                : base_type(static_cast<base_type&>(that))
+            {
+                that.m_ptr = nullptr;
+                that.m_size = that.m_capacity = 0;
+            }
             ~vector()
             {
                 core::destroy_n(this->m_ptr, this->m_size);
+            }
+            self_type& operator=(self_type& that)
+            {
+                if (this != &that)
+                {
+                    assign(that.begin(), that.end());
+                }
+                return *this;
+            }
+            self_type& operator=(self_type&& that)
+            {
+                if (this != &that)
+                {
+                    (*this).swap(that);
+                }
+                return *this;
             }
             auto constexpr get_allocator() const noexcept -> allocator_type
             {
