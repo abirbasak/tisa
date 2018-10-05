@@ -468,7 +468,7 @@ namespace azuik
                     std::rotate(this->m_ptr + offset, this->m_ptr + old_size,
                                 this->m_ptr + this->m_size);
                 }
-                return iterator{*this, this->m_ptr + offset + n};
+                return iterator{*this, this->m_ptr + offset};
             }
         };
 
