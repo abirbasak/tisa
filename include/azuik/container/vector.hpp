@@ -402,26 +402,66 @@ namespace azuik
             }
             template <class InIter>
             auto assign(InIter first, InIter last, core::input_iterator_tag) -> void
-            {}
-            template <class FwdIter>
-            auto assign(FwdIter first, FwdIter last, core::forward_iterator_tag) -> void
-            {}
-            void assign_n(size_type n, value_type const& x)
             {
-                if (this->remaining2() < n) {}
+                auto p = this->bos();
+                for (; first != last && p != this->eod; ++first, void(), ++p)
+                {
+                    *p = *first;
+                }
+                if (first == last)
+                {
+                    core::destroy(p, this->eod);
+                    this->eod = p;
+                }
                 else
                 {
-                    if (n > this->m_size)
+                    append(first, last);
+                }
+            }
+            template <class FwdIter>
+            auto assign(FwdIter first, FwdIter last, core::forward_iterator_tag) -> void
+            {
+                auto n = std::distance(first, last);
+                if (this->remaining2() < n)
+                {
+                    self_type temp{first, last, base_type::alloc_ref()};
+                    (*this).swap(temp);
+                }
+                else
+                {
+                    if (n > size())
                     {
-                        std::fill_n(this->m_bos, this->m_size, x);
-                        core::uninitialized_fill_n(this->m_bos + this->m_size, n - this->m_size, x);
-                        this->m_size = n;
+                        auto p = first + size();
+                        std::copy(first, p, this->bos());
+                        this->eod = core::uninitialized_copy(p, last, this->eod);
                     }
                     else
                     {
-                        std::fill_n(this->m_bos, n, x);
-                        core::destroy_n(this->m_bos + this->m_size, this->m_size - n);
-                        this->m_size = n;
+                        std::copy(first, last, this->bos());
+                        core::destroy_n(this->eod, size() - n);
+                        this->eod -= size() - n;
+                    }
+                }
+            }
+            void assign_n(size_type n, value_type const& x)
+            {
+                if (this->remaining2() < n)
+                {
+                    self_type temp{n, x, base_type::alloc_ref()};
+                    (*this).swap(temp);
+                }
+                else
+                {
+                    if (n > size())
+                    {
+                        std::fill(this->bos(), this->eod, x);
+                        this->eod = core::uninitialized_fill_n(this->eod, n - size(), x);
+                    }
+                    else
+                    {
+                        std::fill_n(this->bos(), n, x);
+                        core::destroy_n(this->eod, size() - n);
+                        this->eod -= size() - n;
                     }
                 }
             }
@@ -437,16 +477,19 @@ namespace azuik
             void append(FwdIter first, FwdIter last, core::forward_iterator_tag)
             {
                 auto n = std::distance(first, last);
-                append_n(first, n);
-            }
-            template <class FwdIter>
-            void append_n(FwdIter first, size_type n)
-            {
                 if (this->remaining2() < n)
                 {
                     reserve(std::max(size() + n, 2 * size()));
                 }
                 this->eod = core::uninitialized_copy_n(first, n, this->eod);
+            }
+            void append_n(size_type n, value_type const& x)
+            {
+                if (this->remaining2() < n)
+                {
+                    reserve(std::max(size() + n, 2 * size()));
+                }
+                this->eod = core::uninitialized_fill_n(this->eod, n, x);
             }
             template <class InIter>
             auto constexpr insert(const_iterator p, InIter first, InIter last,
@@ -463,11 +506,7 @@ namespace azuik
             auto constexpr insert(const_iterator p, FwdIter first, FwdIter last,
                                   core::forward_iterator_tag tag) -> iterator
             {
-                return insert_n(p, first, std::distance(first, last));
-            }
-            template <class FwdIter>
-            auto constexpr insert_n(const_iterator p, FwdIter first, size_type n) -> iterator
-            {
+                auto n = std::distance(first, last);
                 node_ptr pos = p.get_node();
                 size_type offset = pos - this->bos();
 
@@ -476,14 +515,14 @@ namespace azuik
                     self_type temp;
                     temp.reserve(std::max(size() + n, 2 * size()));
                     temp.append(this->bos(), pos);
-                    temp.append_n(first, n);
+                    temp.append(first, last);
                     temp.append(pos, this->eod);
                     swap(temp);
                 }
                 else
                 {
                     size_type old_size = size();
-                    append_n(first, n);
+                    append(first, last);
                     std::rotate(this->bos() + offset, this->bos() + old_size, this->eod);
                 }
                 return iterator{*this, this->bos() + offset};
