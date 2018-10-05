@@ -230,19 +230,53 @@ namespace azuik
             {
                 append(first, last, core::iterator_category<InIter>{});
             }
-            template <class FwdIter>
-            auto constexpr append(FwdIter first, size_type n) -> void
+            auto constexpr append(size_type n, value_type const& x) -> void
             {
-                append_n(first, n);
+                if (this->m_capacity - this->m_size < n)
+                {
+                    reserve(std::max(this->m_size + n, 2 * this->m_size));
+                }
+                core::uninitialized_fill_n(this->m_ptr, n, x);
+                this->m_size += n;
             }
-            template <class... Args>
-            auto constexpr insert(const_iterator p, Args&&... args) -> iterator
+            auto constexpr insert(const_iterator p, value_type const& x) -> iterator
             {
-                throw;
+                return insert(p, &x, &x + 1);
             }
-            template <class InIter>
-            auto constexpr insert(const_iterator p, InIter first, InIter last) -> void
-            {}
+            auto constexpr insert(const_iterator p, size_type n, value_type const& x) -> iterator
+            {
+                node_ptr eos = this->m_ptr + this->m_size;
+                node_ptr pos = p.get_node();
+                size_type offset = pos - this->m_ptr;
+
+                if ((this->m_capacity - this->m_size) < n)
+                {
+                    self_type another;
+                    another.reserve(std::max(this->m_size + n, 2 * this->m_size));
+                    core::uninitialized_safe_move(this->m_ptr, pos, another.m_ptr + another.m_size);
+                    another.m_size += offset;
+
+                    core::uninitialized_fill_n(another.m_ptr + another.m_size, n, x);
+                    another.m_size += n;
+
+                    core::uninitialized_safe_move(pos, eos, another.m_ptr + another.m_size);
+                    another.m_size += (eos - pos);
+                    swap(another);
+                }
+                else
+                {
+                    size_type old_size = this->m_size;
+                    append(n, x);
+                    std::rotate(this->m_ptr + offset, this->m_ptr + old_size,
+                                this->m_ptr + this->m_size);
+                }
+                return iterator{*this, this->m_ptr + offset + n};
+            }
+            template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
+            auto constexpr insert(const_iterator p, InIter first, InIter last) -> iterator
+            {
+                return insert(p, first, last, core::iterator_category<InIter>{});
+            }
             auto constexpr erase(const_iterator first, const_iterator last) -> iterator
             {
                 auto p = std::move(last.get_node(), this->m_ptr + this->m_size, first.get_node());
@@ -256,8 +290,13 @@ namespace azuik
             }
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             void assign(InIter first, InIter last)
-            {}
-            void assign(size_type n, value_type const& x) {}
+            {
+                assign(first, last, core::iterator_category<InIter>{});
+            }
+            void assign(size_type n, value_type const& x)
+            {
+                assign_n(n, x);
+            }
             void reserve(size_type n)
             {
                 if (n > this->m_capacity)
@@ -340,23 +379,33 @@ namespace azuik
                 this->m_ptr = ptr;
                 this->m_capacity = n;
             }
+            template <class InIter>
+            auto assign(InIter first, InIter last, core::input_iterator_tag) -> void
+            {}
+            template <class FwdIter>
+            auto assign(FwdIter first, FwdIter last, core::forward_iterator_tag) -> void
+            {}
             void assign_n(size_type n, value_type const& x)
             {
-                if (n > this->m_size)
-                {
-                    std::fill_n(this->m_ptr, this->m_size, x);
-                    core::uninitialized_fill_n(this->m_ptr + this->m_size, n - this->m_size, x);
-                    this->m_size = n;
-                }
+                if (this->m_capacity < n) {}
                 else
                 {
-                    std::fill_n(this->m_ptr, n, x);
-                    core::destroy_n(this->m_ptr + this->m_size, this->m_size - n);
-                    this->m_size = n;
+                    if (n > this->m_size)
+                    {
+                        std::fill_n(this->m_ptr, this->m_size, x);
+                        core::uninitialized_fill_n(this->m_ptr + this->m_size, n - this->m_size, x);
+                        this->m_size = n;
+                    }
+                    else
+                    {
+                        std::fill_n(this->m_ptr, n, x);
+                        core::destroy_n(this->m_ptr + this->m_size, this->m_size - n);
+                        this->m_size = n;
+                    }
                 }
             }
             template <class InIter>
-            void append(InIter first, InIter last, std::input_iterator_tag)
+            void append(InIter first, InIter last, core::input_iterator_tag)
             {
                 for (; first != last; ++first)
                 {
@@ -364,7 +413,7 @@ namespace azuik
                 }
             }
             template <class FwdIter>
-            void append(FwdIter first, FwdIter last, std::forward_iterator_tag)
+            void append(FwdIter first, FwdIter last, core::forward_iterator_tag)
             {
                 auto n = std::distance(first, last);
                 append_n(first, n);
@@ -378,6 +427,48 @@ namespace azuik
                 }
                 core::uninitialized_copy_n(first, n, this->m_ptr + this->m_size);
                 this->m_size += n;
+            }
+            template <class InIter>
+            auto constexpr insert(const_iterator p, InIter first, InIter last,
+                                  core::input_iterator_tag tag) -> iterator
+            {
+                size_type offset = p.get_node() - this->m_ptr;
+                size_type old_size = this->m_size;
+                append(first, last, tag);
+                std::rotate(this->m_ptr + offset, this->m_ptr + old_size,
+                            this->m_ptr + this->m_size);
+                return end() - old_size + offset;
+            }
+            template <class FwdIter>
+            auto constexpr insert(const_iterator p, FwdIter first, FwdIter last,
+                                  core::forward_iterator_tag tag) -> iterator
+            {
+                return insert_n(p, first, std::distance(first, last));
+            }
+            template <class FwdIter>
+            auto constexpr insert_n(const_iterator p, FwdIter first, size_type n) -> iterator
+            {
+                node_ptr eos = this->m_ptr + this->m_size;
+                node_ptr pos = p.get_node();
+                size_type offset = pos - this->m_ptr;
+
+                if ((this->m_capacity - this->m_size) < n)
+                {
+                    self_type another;
+                    another.reserve(std::max(this->m_size + n, 2 * this->m_size));
+                    another.append(this->m_ptr, pos);
+                    another.append_n(first, n);
+                    another.append(pos, eos);
+                    swap(another);
+                }
+                else
+                {
+                    size_type old_size = this->m_size;
+                    append_n(first, n);
+                    std::rotate(this->m_ptr + offset, this->m_ptr + old_size,
+                                this->m_ptr + this->m_size);
+                }
+                return iterator{*this, this->m_ptr + offset + n};
             }
         };
 
