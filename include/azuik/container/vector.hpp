@@ -57,11 +57,11 @@ namespace azuik
                 {
                     return alloc_ref().template deallocate<value_type>(m_ptr, n);
                 }
-                auto constexpr alloc_ref() noexcept
+                auto constexpr alloc_ref() noexcept -> allocator_type&
                 {
                     return static_cast<allocator_type&>(*this);
                 }
-                auto constexpr alloc_ref() const noexcept
+                auto constexpr alloc_ref() const noexcept -> allocator_type const&
                 {
                     return static_cast<allocator_type const&>(*this);
                 }
@@ -75,6 +75,7 @@ namespace azuik
                 }
                 auto swap(vector_base& that) noexcept
                 {
+                    std::swap(alloc_ref(), that.alloc_ref());
                     std::swap(m_ptr, that.m_ptr);
                     std::swap(m_capacity, that.m_capacity);
                     std::swap(m_size, that.m_size);
