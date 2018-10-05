@@ -95,6 +95,10 @@ namespace azuik
                 {
                     return capacity() == m_size;
                 }
+                auto constexpr bos() const noexcept -> pointer
+                {
+                    return static_cast<pointer>(m_bos);
+                }
                 auto swap(vector_base& that) noexcept
                 {
                     std::swap(alloc_ref(), that.alloc_ref());
@@ -102,12 +106,20 @@ namespace azuik
                     std::swap(m_eos, that.m_eos);
                     std::swap(m_size, that.m_size);
                 }
+
+            private:
                 pointer m_bos;
                 pointer m_eos;
+
+            public:
                 size_type m_size;
             };
 
         } // namespace detail_
+
+        struct with_capacity {
+            size_t value;
+        };
         template <class T, class A>
         class vector : private detail_::vector_base<T, A> {
         public:
@@ -134,19 +146,23 @@ namespace azuik
             explicit constexpr vector(allocator_type const& a = {}) noexcept
                 : base_type{a}
             {}
+            explicit constexpr vector(with_capacity c, allocator_type const& a = {}) noexcept
+                : base_type{c.value, a}
+            {}
             explicit constexpr vector(size_type n, allocator_type const& a = {})
                 : base_type{n, a}
             {
-                core::uninitialized_value_construct_n(this->m_bos, n);
+                core::uninitialized_value_construct_n(this->bos(), n);
                 this->m_size = n;
             }
             explicit constexpr vector(size_type n, value_type const& x,
                                       allocator_type const& a = {})
                 : base_type{n, a}
             {
-                core::uninitialized_fill_n(this->m_bos, n, x);
+                core::uninitialized_fill_n(this->bos(), n, x);
                 this->m_size = n;
             }
+
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             constexpr vector(InIter first, InIter last, allocator_type const& a = {})
                 : base_type{a}
@@ -156,13 +172,13 @@ namespace azuik
             vector(self_type const& that)
                 : base_type{that.size(), that.get_allocator()}
             {
-                core::uninitialized_copy_n(that.m_bos, that.m_size, this->m_bos);
+                core::uninitialized_copy_n(that.bos(), that.m_size, this->bos());
                 this->m_size = that.m_size;
             }
             vector(self_type const& that, allocator_type const& a)
                 : base_type{that.size(), a}
             {
-                core::uninitialized_copy_n(that.m_bos, that.m_size, this->m_bos);
+                core::uninitialized_copy_n(that.bos(), that.m_size, this->bos());
                 this->m_size = that.m_size;
             }
             vector(self_type&& that) noexcept
@@ -172,7 +188,7 @@ namespace azuik
             }
             ~vector()
             {
-                core::destroy_n(this->m_bos, this->m_size);
+                core::destroy_n(this->bos(), this->m_size);
             }
             self_type& operator=(self_type& that)
             {
@@ -208,29 +224,29 @@ namespace azuik
             }
             auto constexpr begin() const noexcept -> const_iterator
             {
-                return const_iterator{*this, static_cast<node_ptr>(this->m_bos)};
+                return const_iterator{*this, this->bos()};
             }
             auto constexpr end() const noexcept -> const_iterator
             {
-                return const_iterator{*this, static_cast<node_ptr>(this->m_bos) + this->m_size};
+                return const_iterator{*this, this->bos() + this->m_size};
             }
             auto constexpr begin() noexcept -> iterator
             {
-                return iterator{*this, this->m_bos};
+                return iterator{*this, this->bos()};
             }
             auto constexpr end() noexcept -> iterator
             {
-                return iterator{*this, this->m_bos + this->m_size};
+                return iterator{*this, this->bos() + this->m_size};
             }
             auto constexpr operator[](size_type i) noexcept -> reference
             {
                 assert(i < this->m_size && "out_of_range");
-                return this->m_bos[i];
+                return this->bos()[i];
             }
             auto constexpr operator[](size_type i) const noexcept -> const_reference
             {
                 assert(i < this->m_size && "out_of_range");
-                return this->m_bos[i];
+                return this->bos()[i];
             }
             template <class... Args>
             auto constexpr push_back(Args&&... args) -> void
@@ -239,12 +255,12 @@ namespace azuik
                 {
                     reserve(2 * this->m_size + 1);
                 }
-                core::construct(this->m_bos + this->m_size, static_cast<Args&&>(args)...);
+                core::construct(this->bos() + this->m_size, static_cast<Args&&>(args)...);
                 ++this->m_size;
             }
             auto constexpr pop_back() noexcept -> void
             {
-                core::destroy(this->m_bos + this->m_size - 1);
+                core::destroy(this->bos() + this->m_size - 1);
                 --this->m_size;
             }
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
@@ -258,7 +274,7 @@ namespace azuik
                 {
                     reserve(std::max(this->m_size + n, 2 * this->m_size));
                 }
-                core::uninitialized_fill_n(this->m_bos, n, x);
+                core::uninitialized_fill_n(this->bos(), n, x);
                 this->m_size += n;
             }
             auto constexpr insert(const_iterator p, value_type const& x) -> iterator
@@ -267,21 +283,21 @@ namespace azuik
             }
             auto constexpr insert(const_iterator p, size_type n, value_type const& x) -> iterator
             {
-                node_ptr eos = this->m_bos + this->m_size;
+                node_ptr eos = this->bos() + this->m_size;
                 node_ptr pos = p.get_node();
-                size_type offset = pos - this->m_bos;
+                size_type offset = pos - this->bos();
 
                 if (this->remaining2() < n)
                 {
                     self_type another;
                     another.reserve(std::max(this->m_size + n, 2 * this->m_size));
-                    core::uninitialized_safe_move(this->m_bos, pos, another.m_bos + another.m_size);
+                    core::uninitialized_safe_move(this->bos(), pos, another.bos() + another.m_size);
                     another.m_size += offset;
 
-                    core::uninitialized_fill_n(another.m_bos + another.m_size, n, x);
+                    core::uninitialized_fill_n(another.bos() + another.m_size, n, x);
                     another.m_size += n;
 
-                    core::uninitialized_safe_move(pos, eos, another.m_bos + another.m_size);
+                    core::uninitialized_safe_move(pos, eos, another.bos() + another.m_size);
                     another.m_size += (eos - pos);
                     swap(another);
                 }
@@ -289,10 +305,10 @@ namespace azuik
                 {
                     size_type old_size = this->m_size;
                     append(n, x);
-                    std::rotate(this->m_bos + offset, this->m_bos + old_size,
-                                this->m_bos + this->m_size);
+                    std::rotate(this->bos() + offset, this->bos() + old_size,
+                                this->bos() + this->m_size);
                 }
-                return iterator{*this, this->m_bos + offset + n};
+                return iterator{*this, this->bos() + offset + n};
             }
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             auto constexpr insert(const_iterator p, InIter first, InIter last) -> iterator
@@ -301,9 +317,9 @@ namespace azuik
             }
             auto constexpr erase(const_iterator first, const_iterator last) -> iterator
             {
-                auto p = std::move(last.get_node(), this->m_bos + this->m_size, first.get_node());
-                core::destroy(p, this->m_bos + this->m_size);
-                this->m_size = p - this->m_bos;
+                auto p = std::move(last.get_node(), this->bos() + this->m_size, first.get_node());
+                core::destroy(p, this->bos() + this->m_size);
+                this->m_size = p - this->bos();
                 return iterator{*this, first.get_node()};
             }
             auto constexpr erase(const_iterator p) -> iterator
@@ -323,7 +339,11 @@ namespace azuik
             {
                 if (n > this->capacity())
                 {
-                    resize_memory(n);
+                    self_type another{with_capacity{n}, base_type::alloc_ref()};
+                    core::uninitialized_safe_move(this->bos(), this->bos() + this->m_size,
+                                                  another.bos());
+                    another.m_size = size();
+                    (*this).swap(another);
                 }
             }
             void resize(size_type n)
@@ -350,7 +370,7 @@ namespace azuik
             }
             auto constexpr clear() noexcept -> void
             {
-                core::destroy_n(this->m_bos, this->m_size);
+                core::destroy_n(this->bos(), this->m_size);
                 this->m_size = 0;
             }
 
@@ -391,15 +411,6 @@ namespace azuik
             auto constexpr alloc_ref() noexcept -> allocator_type&
             {
                 return static_cast<allocator_type&>(*this);
-            }
-            void resize_memory(size_type n)
-            {
-                auto ptr = base_type::allocate(n);
-                core::uninitialized_safe_move(this->m_bos, this->m_bos + this->m_size, ptr);
-                core::destroy_n(this->m_bos, this->m_size);
-                base_type::deallocate(this->m_bos, this->m_size);
-                this->m_bos = ptr;
-                this->m_eos = this->m_bos + n;
             }
             template <class InIter>
             auto assign(InIter first, InIter last, core::input_iterator_tag) -> void
@@ -447,7 +458,7 @@ namespace azuik
                 {
                     reserve(std::max(this->m_size + n, 2 * this->m_size));
                 }
-                core::uninitialized_copy_n(first, n, this->m_bos + this->m_size);
+                core::uninitialized_copy_n(first, n, this->bos() + this->m_size);
                 this->m_size += n;
             }
             template <class InIter>
@@ -470,15 +481,15 @@ namespace azuik
             template <class FwdIter>
             auto constexpr insert_n(const_iterator p, FwdIter first, size_type n) -> iterator
             {
-                node_ptr eos = this->m_bos + this->m_size;
+                node_ptr eos = this->bos() + this->m_size;
                 node_ptr pos = p.get_node();
-                size_type offset = pos - this->m_bos;
+                size_type offset = pos - this->bos();
 
                 if (this->remaining2() < n)
                 {
                     self_type another;
                     another.reserve(std::max(this->m_size + n, 2 * this->m_size));
-                    another.append(this->m_bos, pos);
+                    another.append(this->bos(), pos);
                     another.append_n(first, n);
                     another.append(pos, eos);
                     swap(another);
@@ -487,10 +498,10 @@ namespace azuik
                 {
                     size_type old_size = this->m_size;
                     append_n(first, n);
-                    std::rotate(this->m_bos + offset, this->m_bos + old_size,
-                                this->m_bos + this->m_size);
+                    std::rotate(this->bos() + offset, this->bos() + old_size,
+                                this->bos() + this->m_size);
                 }
-                return iterator{*this, this->m_bos + offset};
+                return iterator{*this, this->bos() + offset};
             }
         };
 
