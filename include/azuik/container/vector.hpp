@@ -421,12 +421,8 @@ namespace azuik
             template <class InIter>
             auto assign(InIter first, InIter last, core::input_iterator_tag) -> void
             {
-                auto p = this->bos();
-                for (; first != last && p != this->eod; ++first, void(), ++p)
-                {
-                    *p = *first;
-                }
-                if (first == last)
+                auto [c, p] = core::copy(first, last, this->bos(), this->eod);
+                if (c == last)
                 {
                     core::destroy(p, this->eod);
                     this->eod = p;
