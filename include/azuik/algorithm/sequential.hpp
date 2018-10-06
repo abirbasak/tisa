@@ -175,6 +175,47 @@ namespace azuik
             }
         } inline constexpr find_sorted{};
 
+        struct copy_while_fn {
+            template <class InIter, class OutIter, class Pred>
+            auto constexpr operator()(InIter first, InIter last, OutIter result, Pred p) const
+                -> std::pair<InIter, OutIter>
+            {
+                for (; first != last && p(*first); ++first)
+                {
+                    *result++ = *first;
+                }
+                return {first, result};
+            }
+            template <class InView, class OutIter, class Pred>
+            auto constexpr operator()(InView&& in, OutIter result, Pred p) const
+                -> std::pair<core::iterator<InView>, OutIter>
+            {
+                return (*this)(core::begin(in), core::end(in), result, p);
+            }
+        };
+        inline constexpr copy_while_fn copy_while = {};
+
+        struct copy_until_fn {
+            template <class InIter, class OutIter, class Pred>
+            auto constexpr operator()(InIter first, InIter last, OutIter result, Pred p) const
+                -> std::pair<InIter, OutIter>
+            {
+                for (; first != last && !p(*first); ++first)
+                {
+                    *result++ = *first;
+                }
+                return {first, result};
+            }
+            template <class InView, class OutIter, class Pred>
+            auto constexpr operator()(InView&& in, OutIter result, Pred p) const
+                -> std::pair<core::iterator<InView>, OutIter>
+            {
+                return (*this)(core::begin(in), core::end(in), result, p);
+            }
+        };
+
+        inline constexpr copy_until_fn copy_until = {};
+
     } // namespace core
 } // namespace azuik
 #endif
