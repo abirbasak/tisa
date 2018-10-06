@@ -43,6 +43,16 @@ namespace azuik
 
 #define AZUIK_ALGORITHM_SEQ(NAME, STD_NAME)                                                        \
     struct NAME##_fn {                                                                             \
+        template <class Iter1, class Iter2>                                                        \
+        auto constexpr operator()(Iter1 f1, Iter1 l1, Iter2 f2) const noexcept                     \
+        {                                                                                          \
+            return ::std::STD_NAME(f1, l1, f2);                                                    \
+        }                                                                                          \
+        template <class Iter1, class Iter2>                                                        \
+        auto constexpr operator()(Iter1 f1, Iter1 l1, Iter2 f2, Iter2 l2) const noexcept           \
+        {                                                                                          \
+            return ::std::STD_NAME(f1, l1, f2, l2);                                                \
+        }                                                                                          \
         template <class View1, class Iter2>                                                        \
         auto constexpr operator()(View1&& v1, Iter2 first) const noexcept                          \
         {                                                                                          \
@@ -107,6 +117,7 @@ namespace azuik
         AZUIK_ALGORITHM_BIPRED(min_element, min_element);
         AZUIK_ALGORITHM_BIPRED(max_element, max_element);
         AZUIK_ALGORITHM_BIPRED(minmax_element, minmax_element);
+        AZUIK_ALGORITHM_SEQ(equal, equal);
         AZUIK_ALGORITHM_SEQ(lexicographical_compare, lexicographical_compare);
 
         // permutations
