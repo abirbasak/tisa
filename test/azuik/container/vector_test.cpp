@@ -322,6 +322,6 @@ AZUIK_TEST_SUIT(vector)
 
     class IncompleteClass {
         core::vector<IncompleteClass> instances;
-        typedef core::vector<IncompleteClass>::iterator it;
+        using It = core::vector<IncompleteClass>::iterator;
     };
 }

@@ -89,7 +89,7 @@ struct macro {
     std::string prefix;
     int n;
 };
-int main(int argc, char* argv[])
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     std::ofstream ofs{"macro.hpp"};
     std::string prefix = "AZUIK_PP";
