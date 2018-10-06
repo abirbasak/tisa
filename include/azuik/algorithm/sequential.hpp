@@ -186,6 +186,58 @@ namespace azuik
             }
         } inline constexpr find_sorted{};
 
+        struct copy_fn {
+            template <class InIter, class OutIter>
+            auto constexpr operator()(InIter first, InIter last, OutIter result) const -> OutIter
+            {
+                return ::std::copy(first, last, result);
+            }
+            template <class InView, class OutIter>
+            auto constexpr operator()(InView&& in, OutIter result) const -> OutIter
+            {
+                return (*this)(core::begin(in), core::end(in), result);
+            }
+            template <class InIter, class OutIter>
+            auto constexpr operator()(InIter first, InIter last, OutIter dfirst,
+                                      OutIter dlast) const -> std::pair<InIter, OutIter>
+            {
+                for (; first != last && dfirst != dlast; ++first, void(), ++dfirst)
+                {
+                    *dfirst = *first;
+                }
+                return {first, dfirst};
+            }
+        };
+        inline constexpr copy_fn copy = {};
+
+        struct copy_if_fn {
+            template <class InIter, class OutIter, class Pred>
+            auto constexpr operator()(InIter first, InIter last, OutIter result, Pred p) const
+                -> OutIter
+            {
+                return ::std::copy_if(first, last, result, p);
+            }
+            template <class InView, class OutIter, class Pred>
+            auto constexpr operator()(InView&& in, OutIter result, Pred p) const -> OutIter
+            {
+                return ::std::copy_if(core::begin(in), core::end(in), result, p);
+            }
+            template <class InIter, class OutIter, class Pred>
+            auto constexpr operator()(InIter first, InIter last, OutIter dfirst, OutIter dlast,
+                                      Pred p) const -> std::pair<InIter, OutIter>
+            {
+                for (; first != last && dfirst != dlast; ++first, void(), ++dfirst)
+                {
+                    if (p(*first))
+                    {
+                        *dfirst = *first;
+                    }
+                }
+                return {first, dfirst};
+            }
+        };
+        inline constexpr copy_if_fn copy_if = {};
+
         struct copy_while_fn {
             template <class InIter, class OutIter, class Pred>
             auto constexpr operator()(InIter first, InIter last, OutIter result, Pred p) const
