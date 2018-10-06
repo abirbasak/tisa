@@ -323,7 +323,25 @@ namespace azuik
             }
             void assign(size_type n, value_type const& x)
             {
-                assign_n(n, x);
+                if (this->remaining2() < n)
+                {
+                    self_type temp{n, x, base_type::alloc_ref()};
+                    (*this).swap(temp);
+                }
+                else
+                {
+                    if (n > size())
+                    {
+                        std::fill(this->bos(), this->eod, x);
+                        this->eod = core::uninitialized_fill_n(this->eod, n - size(), x);
+                    }
+                    else
+                    {
+                        auto p = std::fill_n(this->bos(), n, x);
+                        core::destroy(p, this->eod);
+                        this->eod = p;
+                    }
+                }
             }
             void reserve(size_type n)
             {
@@ -342,7 +360,7 @@ namespace azuik
                 }
                 else
                 {
-                    append_n(n - this->m_size, value_type{});
+                    append(n - this->m_size, value_type{});
                 }
             }
             void resize(size_type n, value_type const& x)
@@ -353,7 +371,7 @@ namespace azuik
                 }
                 else
                 {
-                    append_n(n - this->m_size, x);
+                    append(n - this->m_size, x);
                 }
             }
             auto constexpr clear() noexcept -> void
@@ -437,34 +455,13 @@ namespace azuik
                     }
                     else
                     {
-                        std::copy(first, last, this->bos());
-                        core::destroy_n(this->eod, size() - n);
-                        this->eod -= size() - n;
+                        auto p = std::copy(first, last, this->bos());
+                        core::destroy(p, this->eod);
+                        this->eod = p;
                     }
                 }
             }
-            void assign_n(size_type n, value_type const& x)
-            {
-                if (this->remaining2() < n)
-                {
-                    self_type temp{n, x, base_type::alloc_ref()};
-                    (*this).swap(temp);
-                }
-                else
-                {
-                    if (n > size())
-                    {
-                        std::fill(this->bos(), this->eod, x);
-                        this->eod = core::uninitialized_fill_n(this->eod, n - size(), x);
-                    }
-                    else
-                    {
-                        std::fill_n(this->bos(), n, x);
-                        core::destroy_n(this->eod, size() - n);
-                        this->eod -= size() - n;
-                    }
-                }
-            }
+
             template <class InIter>
             void append(InIter first, InIter last, core::input_iterator_tag)
             {
@@ -483,14 +480,7 @@ namespace azuik
                 }
                 this->eod = core::uninitialized_copy_n(first, n, this->eod);
             }
-            void append_n(size_type n, value_type const& x)
-            {
-                if (this->remaining2() < n)
-                {
-                    reserve(std::max(size() + n, 2 * size()));
-                }
-                this->eod = core::uninitialized_fill_n(this->eod, n, x);
-            }
+
             template <class InIter>
             auto constexpr insert(const_iterator p, InIter first, InIter last,
                                   core::input_iterator_tag tag) -> iterator
