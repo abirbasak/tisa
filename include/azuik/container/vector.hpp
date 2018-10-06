@@ -153,13 +153,13 @@ namespace azuik
             explicit constexpr vector(size_type n, allocator_type const& a = {})
                 : base_type{n, a}
             {
-                this->eod = core::uninitialized_value_construct_n(this->bos(), n);
+                this->eod = core::uninitialized_value_construct_n(this->eod, n);
             }
             explicit constexpr vector(size_type n, value_type const& x,
                                       allocator_type const& a = {})
                 : base_type{n, a}
             {
-                this->eod = core::uninitialized_fill_n(this->bos(), n, x);
+                this->eod = core::uninitialized_fill_n(this->eod, n, x);
             }
 
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
@@ -171,12 +171,12 @@ namespace azuik
             vector(self_type const& that)
                 : base_type{that.size(), that.get_allocator()}
             {
-                this->eod = core::uninitialized_copy(that.bos(), that.eod, this->bos());
+                this->eod = core::uninitialized_copy(that.bos(), that.eod, this->eod);
             }
             vector(self_type const& that, allocator_type const& a)
                 : base_type{that.size(), a}
             {
-                this->eod = core::uninitialized_copy(that.bos(), that.eod, this->bos());
+                this->eod = core::uninitialized_copy(that.bos(), that.eod, this->eod);
             }
             vector(self_type&& that) noexcept
                 : base_type(static_cast<base_type&>(that))
@@ -271,9 +271,9 @@ namespace azuik
                 {
                     reserve(std::max(size() + n, 2 * size()));
                 }
-                core::uninitialized_fill_n(this->bos(), n, x);
-                this->eod += n;
+                this->eod = core::uninitialized_fill_n(this->eod, n, x);
             }
+
             auto constexpr insert(const_iterator p, value_type const& x) -> iterator
             {
                 return insert(p, &x, &x + 1);
