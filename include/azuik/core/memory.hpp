@@ -29,14 +29,16 @@ namespace azuik
 
         struct destroy_fn {
             template <class InIter>
-            auto constexpr operator()(InIter first, InIter last) const noexcept -> void
+            auto constexpr operator()(InIter first, InIter last) const noexcept -> InIter
             {
-                return std::destroy(first, last);
+                std::destroy(first, last);
+                return first;
             }
             template <class Ptr>
-            auto constexpr operator()(Ptr p) const noexcept -> void
+            auto constexpr operator()(Ptr p) const noexcept -> Ptr
             {
-                return std::destroy_at(p);
+                std::destroy_at(p);
+                return p;
             }
         };
         inline constexpr destroy_fn destroy = {};
@@ -45,7 +47,8 @@ namespace azuik
             template <class FwdIter, class Size>
             auto constexpr operator()(FwdIter first, Size n) const noexcept -> FwdIter
             {
-                return std::destroy_n(first, n);
+                std::destroy_n(first, n);
+                return first; //NOTE: this is different from std::destroy_n which returns std::next(first,n);
             }
         };
 
