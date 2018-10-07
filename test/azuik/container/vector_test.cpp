@@ -119,7 +119,7 @@ AZUIK_TEST_SUIT(vector)
     {
         int array[] = {1, 4, 9, 16};
 
-        core::vector<int> v(array, array + 4);
+        core::vector<int> v(std::begin(array), std::end(array));
 
         AZUIK_TEST(v.size() == 4);
 
@@ -133,7 +133,7 @@ AZUIK_TEST_SUIT(vector)
     {
         int array[] = {1, 4, 9, 16, 25, 36};
 
-        core::vector<int> v(array, array + 6);
+        core::vector<int> v(std::begin(array), std::end(array));
         core::vector<int>::iterator vit;
 
         AZUIK_TEST(v.size() == 6);
@@ -175,7 +175,7 @@ AZUIK_TEST_SUIT(vector)
         int array1[] = {1, 4, 25};
         int array2[] = {9, 16};
 
-        core::vector<int> v(array1, array1 + 3);
+        core::vector<int> v(std::begin(array1), std::end(array1));
         core::vector<int>::iterator vit;
         vit = v.insert(v.begin(), 0);
         AZUIK_TEST(*vit == 0);
@@ -190,7 +190,7 @@ AZUIK_TEST_SUIT(vector)
         AZUIK_TEST(v[3] == 25);
         AZUIK_TEST(v[4] == 36);
 
-        v.insert(v.begin() + 3, array2, array2 + 2);
+        v.insert(v.begin() + 3, std::begin(array2), std::end(array2));
 
         AZUIK_TEST(v.size() == 7);
 
@@ -274,13 +274,14 @@ AZUIK_TEST_SUIT(vector)
 
     struct point2 : public point {
         point2()
-            : copied(false)
+            : point()
         {}
-        point2(const point&)
-            : copied(true)
+        point2(const point& p)
+            : point{p}
+            , copied(true)
         {}
 
-        bool copied;
+        bool copied = false;
     };
 
     AZUIK_TEST_CASE(optimizations_check)
@@ -298,7 +299,7 @@ AZUIK_TEST_SUIT(vector)
         core::vector<int> v(3, 1);
         int array[] = {1, 2, 3, 4, 5};
 
-        v.assign(array, array + 5);
+        v.assign(std::begin(array), std::end(array));
         AZUIK_TEST(v[4] == 5);
         AZUIK_TEST(v[0] == 1);
         AZUIK_TEST(v[1] == 2);
