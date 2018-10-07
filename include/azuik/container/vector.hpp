@@ -106,18 +106,22 @@ namespace azuik
         public:
             explicit constexpr vector(allocator_type const& a = {}) noexcept
                 : base_type{a}
+                , eod{base_type::bos}
             {}
             explicit constexpr vector(with_capacity c, allocator_type const& a = {}) noexcept
                 : base_type{c.value, a}
+                , eod{base_type::bos}
             {}
             explicit constexpr vector(size_type n, allocator_type const& a = {})
                 : base_type{n, a}
+                , eod{base_type::bos}
             {
                 eod = core::uninitialized_value_construct_n(eod, n);
             }
             explicit constexpr vector(size_type n, value_type const& x,
                                       allocator_type const& a = {})
                 : base_type{n, a}
+                , eod{base_type::bos}
             {
                 eod = core::uninitialized_fill_n(eod, n, x);
             }
@@ -125,21 +129,25 @@ namespace azuik
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             constexpr vector(InIter first, InIter last, allocator_type const& a = {})
                 : base_type{a}
+                , eod{base_type::bos}
             {
                 append(first, last);
             }
             vector(self_type const& that)
                 : base_type{that.size(), that.get_allocator()}
+                , eod{base_type::bos}
             {
                 eod = core::uninitialized_copy(that.bos, that.eod, eod);
             }
             vector(self_type const& that, allocator_type const& a)
                 : base_type{that.size(), a}
+                , eod{base_type::bos}
             {
                 eod = core::uninitialized_copy(that.bos, that.eod, eod);
             }
             vector(self_type&& that) noexcept
                 : base_type(static_cast<base_type&>(that))
+                , eod{that.eod}
             {
                 that.bos = that.eos = that.eod = nullptr;
             }
