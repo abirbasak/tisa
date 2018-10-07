@@ -662,6 +662,10 @@ namespace azuik
             {
                 that.bos = that.eos = that.bod = that.eod = nullptr;
             }
+            ~dvector()
+            {
+                core::destroy(bod, eod);
+            }
 
             constexpr auto operator=(self_type const& that) -> self_type&;
             constexpr auto operator=(self_type&& that) -> self_type&;
@@ -684,12 +688,39 @@ namespace azuik
             auto constexpr resize(size_type n, value_type const& x);
 
             template <class... Args>
-            auto constexpr push_back(Args&&... args) -> void;
-            template <class... Args>
-            auto constexpr push_front(Args&&... args) -> void;
+            auto constexpr push_front(Args&&... args) -> void
+            {
+                if (full_front())
+                {
+                    reserve_front(2 * size() + 1);
+                }
+                core::construct(bod - 1, static_cast<Args&&>(args)...);
+                --bod;
+            }
 
-            auto constexpr pop_back() -> void;
-            auto constexpr pop_front() -> void;
+            template <class... Args>
+            auto constexpr push_back(Args&&... args) -> void
+            {
+                if (full_back())
+                {
+                    reserve_back(2 * size() + 1);
+                }
+                core::construct(eod, static_cast<Args&&>(args)...);
+                ++eod;
+            }
+
+            auto constexpr pop_front() noexcept -> void
+            {
+                assert(!empty() && "empty vector");
+                core::destroy(bod);
+                ++bod;
+            }
+            auto constexpr pop_back() noexcept -> void
+            {
+                assert(!empty() && "empty vector");
+                core::destroy(eod - 1);
+                --eod;
+            }
 
             auto constexpr append(size_type n, value_type const& x) -> iterator;
             auto constexpr prepend(size_type n, value_type const& x) -> iterator;
@@ -713,13 +744,30 @@ namespace azuik
             {
                 return eod - bod;
             }
+
+            auto constexpr capacity() const noexcept -> size_type
+            {
+                return base_type::capacity();
+            }
+            auto constexpr remaining_front() const noexcept -> size_type
+            {
+                return bod - base_type::bos;
+            }
+            auto constexpr remaining_back() const noexcept -> size_type
+            {
+                return base_type::eos - eod;
+            }
             auto constexpr empty() const noexcept -> bool
             {
                 return eod == bod;
             }
-            auto constexpr capacity() const noexcept -> size_type
+            auto constexpr full_front() const noexcept -> bool
             {
-                return base_type::capacity();
+                return bod == base_type::bos;
+            }
+            auto constexpr full_back() const noexcept -> bool
+            {
+                return base_type::eos == eod;
             }
             auto constexpr begin() const noexcept -> const_iterator
             {
