@@ -669,7 +669,12 @@ namespace azuik
             template <class InIter>
             auto constexpr assign(InIter first, InIter last) -> void;
 
-            auto constexpr swap(self_type& that) noexcept;
+            auto constexpr swap(self_type& that) noexcept
+            {
+                std::swap(static_cast<base_type&>(*this), static_cast<base_type&>(that));
+                std::swap(bod, that.bod);
+                std::swap(eod, that.eod);
+            }
 
             auto constexpr reserve_front(size_type n) -> void;
             auto constexpr reserve_back(size_type n) -> void;
