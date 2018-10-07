@@ -610,8 +610,7 @@ namespace azuik
                 , bod{base_type::bos}
                 , eod{base_type::bos}
             {
-                eod = core::uninitialized_value_construct_n(base_type::bos, n);
-                bod = eod;
+                eod = core::uninitialized_value_construct_n(base_type::bod, n);
             }
             explicit constexpr dvector(size_type n, value_type const& x,
                                        allocator_type const& a = {})
@@ -619,8 +618,7 @@ namespace azuik
                 , bod{base_type::bos}
                 , eod{base_type::bos}
             {
-                eod = core::uninitialized_fill_n(base_type::bos, n);
-                bod = eod;
+                eod = core::uninitialized_fill_n(base_type::bod, n);
             }
 
             template <class InIter>
@@ -632,10 +630,28 @@ namespace azuik
                 append(first, last);
             }
 
-            constexpr dvector(self_type const& that);
-            constexpr dvector(self_type const& that, allocator_type const& a);
+            constexpr dvector(self_type const& that)
+                : base_type{that.size(), that.alloc_ref()}
+                , bod{base_type::bos}
+                , eod{base_type::bos}
+            {
+                base_type::eod = core::uninitialized_copy(that.bod, that.eod, base_type::eod);
+            }
+            constexpr dvector(self_type const& that, allocator_type const& a)
+                : base_type{that.size(), a}
+                , bod{base_type::bos}
+                , eod{base_type::bos}
+            {
+                base_type::eod = core::uninitialized_copy(that.bod, that.eod, base_type::eod);
+            }
 
-            constexpr dvector(self_type&& that) noexcept;
+            constexpr dvector(self_type&& that) noexcept
+                : base_type{static_cast<base_type&&>(that)}
+                , bod(that.bod)
+                , eod{that.eod}
+            {
+                that.bos = that.eos = that.bod = that.eod = nullptr;
+            }
 
             constexpr auto operator=(self_type const& that) -> self_type&;
             constexpr auto operator=(self_type&& that) -> self_type&;
