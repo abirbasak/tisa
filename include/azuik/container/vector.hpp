@@ -226,8 +226,7 @@ namespace azuik
             auto constexpr pop_back() noexcept -> void
             {
                 assert(!empty() && "empty vector");
-                core::destroy(eod - 1);
-                --eod;
+                eod = core::destroy(eod - 1);
             }
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             auto constexpr append(InIter first, InIter last) -> void
@@ -277,8 +276,7 @@ namespace azuik
             auto constexpr erase(const_iterator first, const_iterator last) -> iterator
             {
                 auto p = std::move(last.get_node(), eod, first.get_node());
-                core::destroy(p, eod);
-                eod = p;
+                eod = core::destroy(p, eod);
                 return iterator{*this, first.get_node()};
             }
             auto constexpr erase(const_iterator p) -> iterator
@@ -307,8 +305,7 @@ namespace azuik
                     else
                     {
                         auto p = std::fill_n(base_type::bos, n, x);
-                        core::destroy(p, eod);
-                        eod = p;
+                        eod = core::destroy(p, eod);
                     }
                 }
             }
@@ -345,8 +342,7 @@ namespace azuik
             }
             auto constexpr clear() noexcept -> void
             {
-                core::destroy(base_type::bos, eod);
-                eod = base_type::bos;
+                eod = core::destroy(base_type::bos, eod);
             }
 
             void swap(self_type& that) noexcept
@@ -422,8 +418,7 @@ namespace azuik
                     else
                     {
                         auto p = std::copy(first, last, base_type::bos);
-                        core::destroy(p, eod);
-                        eod = p;
+                        eod = core::destroy(p, eod);
                     }
                 }
             }
@@ -629,14 +624,12 @@ namespace azuik
             auto constexpr pop_front() noexcept -> void
             {
                 assert(!empty() && "empty vector");
-                core::destroy(bod);
-                ++bod;
+                bod = ++core::destroy(bod);
             }
             auto constexpr pop_back() noexcept -> void
             {
                 assert(!empty() && "empty vector");
-                core::destroy(eod - 1);
-                --eod;
+                eod = core::destroy(eod - 1);
             }
 
             auto constexpr append(size_type n, value_type const& x) -> iterator;
