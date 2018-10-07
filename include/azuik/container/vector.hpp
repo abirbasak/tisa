@@ -435,6 +435,7 @@ namespace azuik
             void swap(self_type& that) noexcept
             {
                 base_type::swap(static_cast<base_type&>(that));
+                std::swap(eod, that.eod);
             }
             auto constexpr operator==(self_type const& that) const noexcept -> bool
             {
@@ -671,7 +672,7 @@ namespace azuik
 
             auto constexpr swap(self_type& that) noexcept
             {
-                std::swap(static_cast<base_type&>(*this), static_cast<base_type&>(that));
+                base_type::swap(static_cast<base_type&>(that));
                 std::swap(bod, that.bod);
                 std::swap(eod, that.eod);
             }
