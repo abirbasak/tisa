@@ -26,7 +26,7 @@ namespace azuik
         namespace detail_
         {
             template <class T, class A>
-            struct contiguous_storage {
+            struct contiguous_storage : private A {
                 using allocator_type = A;
                 using size_type = core::allocator_size<T, A>;
                 using value_type = core::allocator_value<T, A>;
@@ -53,6 +53,10 @@ namespace azuik
                 auto constexpr alloc_ref() const noexcept -> allocator_type const&
                 {
                     return static_cast<allocator_type const&>(*this);
+                }
+                auto constexpr alloc_ref() noexcept -> allocator_type&
+                {
+                    return static_cast<allocator_type&>(*this);
                 }
                 auto allocate(size_type n) -> pointer
                 {
