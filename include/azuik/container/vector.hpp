@@ -162,30 +162,6 @@ namespace azuik
                 pointer m_eos;
             };
 
-            template <class T, class A>
-            struct dvector_base : A {
-                using allocator_type = A;
-                using size_type = core::allocator_size<T, A>;
-                using value_type = core::allocator_value<T, A>;
-                using pointer = core::allocator_pointer<T, A>;
-                pointer bos;
-                pointer eos;
-                pointer bod;
-                pointer eod;
-
-                constexpr explicit dvector_base(allocator_type const& a) noexcept
-                    : allocator_type{a}
-                {
-                    bos = eos = bod = eod = nullptr;
-                }
-                constexpr explicit dvector_base(size_type n, allocator_type const& a)
-                    : allocator_type{a}
-                {
-                    bos = bod = eod = allocate(n);
-                    eos = bos + n;
-                }
-            };
-
         } // namespace detail_
 
         struct with_capacity {
@@ -600,7 +576,10 @@ namespace azuik
         };
 
         template <class T, class A>
-        class dvector {
+        class dvector : detail_::contiguous_storage<T, A> {
+        private:
+            using base_type = detail_::contiguous_storage<T, A>;
+
         public:
             using self_type = dvector;
             using allocator_type = core::allocator_type<self_type>;
@@ -615,15 +594,43 @@ namespace azuik
             using const_iterator = core::const_iterator<self_type>;
 
         public:
-            explicit constexpr dvector(allocator_type const& a = {}) noexcept;
-            explicit constexpr dvector(with_capacity c, allocator_type const& a = {});
+            explicit constexpr dvector(allocator_type const& a = {}) noexcept
+                : base_type{a}
+                , bod{base_type::bos}
+                , eod{base_type::bos}
+            {}
+            explicit constexpr dvector(with_capacity c, allocator_type const& a = {})
+                : base_type{c.value, a}
+                , bod{base_type::bos}
+                , eod{base_type::bos}
+            {}
 
-            explicit constexpr dvector(size_type n, allocator_type const& a = {});
+            explicit constexpr dvector(size_type n, allocator_type const& a = {})
+                : base_type{n, a}
+                , bod{base_type::bos}
+                , eod{base_type::bos}
+            {
+                eod = core::uninitialized_value_construct_n(base_type::bos, n);
+                bod = eod;
+            }
             explicit constexpr dvector(size_type n, value_type const& x,
-                                       allocator_type const& a = {});
+                                       allocator_type const& a = {})
+                : base_type{n, a}
+                , bod{base_type::bos}
+                , eod{base_type::bos}
+            {
+                eod = core::uninitialized_fill_n(base_type::bos, n);
+                bod = eod;
+            }
 
             template <class InIter>
-            explicit constexpr dvector(InIter first, InIter last, allocator_type const& a = {});
+            explicit constexpr dvector(InIter first, InIter last, allocator_type const& a = {})
+                : base_type{a}
+                , bod{base_type::bos}
+                , eod{base_type::bos}
+            {
+                append(first, last);
+            }
 
             constexpr dvector(self_type const& that);
             constexpr dvector(self_type const& that, allocator_type const& a);
@@ -673,48 +680,46 @@ namespace azuik
 
             auto constexpr size() const noexcept -> size_type
             {
-                return m_size;
+                return eod - bod;
             }
             auto constexpr empty() const noexcept -> bool
             {
-                return m_size == 0;
+                return eod == bod;
             }
             auto constexpr capacity() const noexcept -> size_type
             {
-                return m_capacity;
+                return base_type::capacity();
             }
             auto constexpr begin() const noexcept -> const_iterator
             {
-                return const_iterator{m_ptr + m_offset};
+                return const_iterator{*this, bod};
             }
             auto constexpr end() const noexcept -> const_iterator
             {
-                return const_iterator{m_ptr + m_offset + m_size};
+                return const_iterator{*this, eod};
             }
             auto constexpr begin() noexcept -> iterator
             {
-                return iterator{m_ptr + m_offset};
+                return iterator{*this, bod};
             }
             auto constexpr end() noexcept -> iterator
             {
-                return iterator{m_ptr + m_offset + m_size};
+                return iterator{*this, eod};
             }
             auto constexpr operator[](size_type i) noexcept -> reference
             {
-                assert(i < m_size && "out_of_range");
-                return m_ptr[m_offset + i];
+                assert(i < size() && "out_of_range");
+                return bod[i];
             }
             auto constexpr operator[](size_type i) const noexcept -> const_reference
             {
-                assert(i < m_size && "out_of_range");
-                return m_ptr[m_offset + i];
+                assert(i < size() && "out_of_range");
+                return bod[i];
             }
 
         private:
-            pointer m_ptr;
-            size_type m_size;
-            size_type m_capacity;
-            size_type m_offset;
+            pointer bod;
+            pointer eod;
         };
 
         template <class V, class Comp = less_fn>
