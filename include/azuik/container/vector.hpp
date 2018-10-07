@@ -635,14 +635,14 @@ namespace azuik
                 , bod{base_type::bos}
                 , eod{base_type::bos}
             {
-                base_type::eod = core::uninitialized_copy(that.bod, that.eod, base_type::eod);
+                eod = core::uninitialized_copy(that.bod, that.eod, eod);
             }
             constexpr dvector(self_type const& that, allocator_type const& a)
                 : base_type{that.size(), a}
                 , bod{base_type::bos}
                 , eod{base_type::bos}
             {
-                base_type::eod = core::uninitialized_copy(that.bod, that.eod, base_type::eod);
+                eod = core::uninitialized_copy(that.bod, that.eod, eod);
             }
 
             constexpr dvector(self_type&& that) noexcept
