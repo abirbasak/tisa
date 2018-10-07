@@ -116,6 +116,30 @@ namespace azuik
                 pointer m_eos;
             };
 
+            template <class T, class A>
+            struct dvector_base : A {
+                using allocator_type = A;
+                using size_type = core::allocator_size<T, A>;
+                using value_type = core::allocator_value<T, A>;
+                using pointer = core::allocator_pointer<T, A>;
+                pointer bos;
+                pointer eos;
+                pointer bod;
+                pointer eod;
+
+                constexpr explicit dvector_base(allocator_type const& a) noexcept
+                    : allocator_type{a}
+                {
+                    bos = eos = bod = eod = nullptr;
+                }
+                constexpr explicit dvector_base(size_type n, allocator_type const& a)
+                    : allocator_type{a}
+                {
+                    bos = bod = eod = allocate(n);
+                    eos = bos + n;
+                }
+            };
+
         } // namespace detail_
 
         struct with_capacity {
@@ -545,6 +569,62 @@ namespace azuik
             using const_iterator = core::const_iterator<self_type>;
 
         public:
+            explicit constexpr dvector(allocator_type const& a = {}) noexcept;
+            explicit constexpr dvector(with_capacity c, allocator_type const& a = {});
+
+            explicit constexpr dvector(size_type n, allocator_type const& a = {});
+            explicit constexpr dvector(size_type n, value_type const& x,
+                                       allocator_type const& a = {});
+
+            template <class InIter>
+            explicit constexpr dvector(InIter first, InIter last, allocator_type const& a = {});
+
+            constexpr dvector(self_type const& that);
+            constexpr dvector(self_type const& that, allocator_type const& a);
+
+            constexpr dvector(self_type&& that) noexcept;
+
+            constexpr auto operator=(self_type const& that) -> self_type&;
+            constexpr auto operator=(self_type&& that) -> self_type&;
+
+            auto constexpr assign(size_type n, value_type const& x) -> void;
+            template <class InIter>
+            auto constexpr assign(InIter first, InIter last) -> void;
+
+            auto constexpr swap(self_type& that) noexcept;
+
+            auto constexpr reserve_front(size_type n) -> void;
+            auto constexpr reserve_back(size_type n) -> void;
+
+            auto constexpr resize(size_type n);
+            auto constexpr resize(size_type n, value_type const& x);
+
+            template <class... Args>
+            auto constexpr push_back(Args&&... args) -> void;
+            template <class... Args>
+            auto constexpr push_front(Args&&... args) -> void;
+
+            auto constexpr pop_back() -> void;
+            auto constexpr pop_front() -> void;
+
+            auto constexpr append(size_type n, value_type const& x) -> iterator;
+            auto constexpr prepend(size_type n, value_type const& x) -> iterator;
+
+            template <class InIter>
+            auto constexpr append(InIter first, InIter last) -> iterator;
+            template <class InIter>
+            auto constexpr prepend(InIter first, InIter last) -> iterator;
+
+            template <class... Args>
+            auto constexpr insert(const_iterator p, Args&&... args) -> iterator;
+            template <class InIter>
+            auto constexpr insert(const_iterator p, InIter first, InIter last) -> iterator;
+            auto constexpr insert(const_iterator p, size_type n, value_type const& x) -> iterator;
+
+            auto constexpr erase(const_iterator p) -> void;
+            auto constexpr erase(const_iterator first, const_iterator last) -> void;
+            auto constexpr clear() -> void;
+
             auto constexpr size() const noexcept -> size_type
             {
                 return m_size;
