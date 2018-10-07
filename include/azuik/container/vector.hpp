@@ -26,6 +26,52 @@ namespace azuik
         namespace detail_
         {
             template <class T, class A>
+            struct contiguous_storage {
+                using allocator_type = A;
+                using size_type = core::allocator_size<T, A>;
+                using value_type = core::allocator_value<T, A>;
+                using pointer = core::allocator_pointer<T, A>;
+                constexpr explicit contiguous_storage(allocator_type const& a = {}) noexcept
+                    : allocator_type{a}
+                    , bos{nullptr}
+                    , eos{nullptr}
+                {}
+                constexpr explicit contiguous_storage(size_type n, allocator_type const& a = {})
+                    : allocator_type{a}
+                {
+                    bos = allocate(n);
+                    eos = bos + n;
+                }
+                ~contiguous_storage()
+                {
+                    deallocate(bos, capacity());
+                }
+                auto constexpr capacity() const noexcept -> size_type
+                {
+                    return eos - bos;
+                }
+                auto constexpr alloc_ref() const noexcept -> allocator_type const&
+                {
+                    return static_cast<allocator_type const&>(*this);
+                }
+                auto allocate(size_type n) -> pointer
+                {
+                    return alloc_ref().template allocate<value_type>(n);
+                }
+                auto constexpr deallocate(pointer p, size_type n) -> void
+                {
+                    return alloc_ref().template deallocate<value_type>(bos, n);
+                }
+                auto constexpr swap(contiguous_storage& that) noexcept
+                {
+                    std::swap(alloc_ref(), that.alloc_ref());
+                    std::swap(bos, that.bos);
+                    std::swap(eos, that.eos);
+                }
+                pointer bos;
+                pointer eos;
+            };
+            template <class T, class A>
             struct vector_base : private A {
                 using allocator_type = A;
                 using size_type = core::allocator_size<T, A>;
