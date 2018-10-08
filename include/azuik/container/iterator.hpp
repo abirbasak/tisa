@@ -34,6 +34,35 @@ namespace azuik
         template <class I>
         using iterator_category = typename iterator_traits<I>::iterator_category;
 
+        struct distance_fn {
+            template <class InIter>
+            auto constexpr operator()(InIter first, InIter last) const
+                -> core::difference_type<InIter>
+            {
+                return ::std::distance(first, last);
+            }
+        };
+        inline constexpr distance_fn distance = {};
+
+        struct next_fn {
+            template <class FwdIter>
+            auto constexpr operator()(FwdIter it, core::difference_type<FwdIter> n = 1) const
+                noexcept
+            {
+                return ::std::next(it, n);
+            }
+        };
+        inline constexpr next_fn next = {};
+
+        struct prev_fn {
+            template <class BiIter>
+            auto constexpr operator()(BiIter it, core::difference_type<BiIter> n = 1) const noexcept
+            {
+                return ::std::prev(it, n);
+            }
+        };
+        inline constexpr prev_fn prev = {};
+
     } // namespace core
     namespace core
     {
