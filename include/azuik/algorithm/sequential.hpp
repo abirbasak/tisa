@@ -187,6 +187,7 @@ namespace azuik
         } inline constexpr find_sorted{};
 
         struct copy_fn {
+            //copy
             template <class InIter, class OutIter>
             auto constexpr operator()(InIter first, InIter last, OutIter result) const -> OutIter
             {
@@ -197,6 +198,14 @@ namespace azuik
             {
                 return (*this)(core::begin(in), core::end(in), result);
             }
+            //copy_n
+            template <class FwdIter, class Size, class OutIter,
+                      core::enable_if<core::is_integral<Size>, int> = 0>
+            auto constexpr operator()(FwdIter first, Size n, OutIter result) const -> OutIter
+            {
+                return ::std::copy_n(first, n, result);
+            }
+            //copy_bounded
             template <class InIter, class OutIter>
             auto constexpr operator()(InIter first, InIter last, OutIter dfirst,
                                       OutIter dlast) const -> std::pair<InIter, OutIter>
@@ -211,6 +220,7 @@ namespace azuik
         inline constexpr copy_fn copy = {};
 
         struct copy_if_fn {
+            //copy_if
             template <class InIter, class OutIter, class Pred>
             auto constexpr operator()(InIter first, InIter last, OutIter result, Pred p) const
                 -> OutIter
@@ -222,6 +232,21 @@ namespace azuik
             {
                 return ::std::copy_if(core::begin(in), core::end(in), result, p);
             }
+            //copy_n_if
+            template <class FwdIter, class Size, class OutIter, class Pred>
+            auto constexpr operator()(FwdIter first, Size n, OutIter result, Pred p) const
+                -> OutIter
+            {
+                for (; n != 0; ++first, void(), --n)
+                {
+                    if (p(*first))
+                    {
+                        *result++ = *first;
+                    }
+                }
+                return result;
+            }
+            //copy_bounded_if
             template <class InIter, class OutIter, class Pred>
             auto constexpr operator()(InIter first, InIter last, OutIter dfirst, OutIter dlast,
                                       Pred p) const -> std::pair<InIter, OutIter>
@@ -237,6 +262,15 @@ namespace azuik
             }
         };
         inline constexpr copy_if_fn copy_if = {};
+
+        struct copy_backward_fn {
+            template <class BiIter1, class BiIter2>
+            auto constexpr operator()(BiIter1 first, BiIter1 last, BiIter1 result) const -> BiIter2
+            {
+                return ::std::copy_backward(first, last, result);
+            }
+        };
+        inline constexpr copy_backward_fn copy_backward = {};
 
         struct copy_while_fn {
             template <class InIter, class OutIter, class Pred>
