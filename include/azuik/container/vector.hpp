@@ -678,14 +678,35 @@ namespace azuik
                 assert(!empty() && "empty vector");
                 eod = core::destroy(eod - 1);
             }
+            template <class InIter, disable_if<core::is_integral<InIter>, int> = 0>
+            auto constexpr append(InIter first, InIter last) -> void
+            {
+                append(first, last, core::iterator_category<InIter>{});
+            }
 
-            auto constexpr append(size_type n, value_type const& x) -> iterator;
-            auto constexpr prepend(size_type n, value_type const& x) -> iterator;
+            auto constexpr append(size_type n, value_type const& x) -> void
+            {
+                if (remaining_back() < n)
+                {
+                    reserve_back(std::min(n, size()));
+                }
+                eod = core::uninitialized_fill_n(eod, n, x);
+            }
+            auto constexpr prepend(size_type n, value_type const& x) -> void
+            {
+                if (remaining_front() < n)
+                {
+                    reserve_front(std::min(n, size()));
+                }
+                core::uninitialized_fill_n(bod - n, n, x);
+                bod -= n;
+            }
 
             template <class InIter>
-            auto constexpr append(InIter first, InIter last) -> iterator;
-            template <class InIter>
-            auto constexpr prepend(InIter first, InIter last) -> iterator;
+            auto constexpr prepend(InIter first, InIter last) -> void
+            {
+                prepend(first, last, core::iterator_category<InIter>{});
+            }
 
             template <class... Args>
             auto constexpr insert(const_iterator p, Args&&... args) -> iterator;
