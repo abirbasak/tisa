@@ -224,6 +224,9 @@ namespace azuik
             template <class... Args>
             auto constexpr push_back(Args&&... args) -> void
             {
+                //NOTE: we are not handling self references
+                //it should be user's responsibility
+                //value_type x{static_cast<Args&&>(args)...};
                 if (full())
                 {
                     reserve(2 * size() + 1);
