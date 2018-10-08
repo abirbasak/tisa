@@ -643,8 +643,28 @@ namespace azuik
                 }
             }
 
-            auto constexpr resize(size_type n);
-            auto constexpr resize(size_type n, value_type const& x);
+            auto constexpr resize(size_type n)
+            {
+                if (n < size())
+                {
+                    erase(begin() + n, end());
+                }
+                else
+                {
+                    append(n - size(), value_type{});
+                }
+            }
+            auto constexpr resize(size_type n, value_type const& x)
+            {
+                if (n < size())
+                {
+                    erase(begin() + n, end());
+                }
+                else
+                {
+                    append(n - size(), x);
+                }
+            }
 
             template <class... Args>
             auto constexpr push_front(Args&&... args) -> void
@@ -776,6 +796,29 @@ namespace azuik
             {
                 assert(i < size() && "out_of_range");
                 return bod[i];
+            }
+
+        private:
+            template <class InIter>
+            auto constexpr append(InIter first, InIter last, core::input_iterator_tag) -> void
+            {
+                for (; first != last; ++first)
+                {
+                    push_back(*first);
+                }
+            }
+            template <class FwdIter>
+            auto constexpr append(FwdIter first, FwdIter last, core::forward_iterator_tag) -> void
+            {}
+
+            template <class InIter>
+            auto constexpr prepend(InIter first, InIter last, core::input_iterator_tag) -> void
+            {
+                //NOTE: this is wrong, correct it using insert
+                for (; first != last; ++first)
+                {
+                    push_front(*first);
+                }
             }
 
         private:
