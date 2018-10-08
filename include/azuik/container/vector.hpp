@@ -590,8 +590,22 @@ namespace azuik
                 core::destroy(bod, eod);
             }
 
-            constexpr auto operator=(self_type const& that) -> self_type&;
-            constexpr auto operator=(self_type&& that) -> self_type&;
+            constexpr auto operator=(self_type const& that) -> self_type&
+            {
+                if (this != &that)
+                {
+                    assign(that.bod, that.eod);
+                }
+                return *this;
+            }
+            constexpr auto operator=(self_type&& that) -> self_type&
+            {
+                if (this != &that)
+                {
+                    (*this).swap(that);
+                }
+                return *this;
+            }
 
             auto constexpr assign(size_type n, value_type const& x) -> void;
             template <class InIter>
@@ -604,8 +618,30 @@ namespace azuik
                 std::swap(eod, that.eod);
             }
 
-            auto constexpr reserve_front(size_type n) -> void;
-            auto constexpr reserve_back(size_type n) -> void;
+            auto constexpr reserve_front(size_type f) -> void
+            {
+                if (remaining_front() < f)
+                {
+                    size_type b = std::max(remaining_back(), f);
+                    size_type c = f + size() + b;
+                    self_type temp{with_capacity{c}, base_type::alloc_ref()};
+                    temp.eod = core::uninitialized_safe_move(bod, eod, temp.bos + f);
+                    temp.bod = temp.bos + f;
+                    (*this).swap(temp);
+                }
+            }
+            auto constexpr reserve_back(size_type b) -> void
+            {
+                if (remaining_back() < b)
+                {
+                    size_type f = std::max(remaining_front(), b);
+                    size_type c = f + size() + b;
+                    self_type temp{with_capacity{c}, base_type::alloc_ref()};
+                    temp.eod = core::uninitialized_safe_move(bod, eod, temp.bos + f);
+                    temp.bod = temp.bos + f;
+                    (*this).swap(temp);
+                }
+            }
 
             auto constexpr resize(size_type n);
             auto constexpr resize(size_type n, value_type const& x);
@@ -659,7 +695,11 @@ namespace azuik
 
             auto constexpr erase(const_iterator p) -> void;
             auto constexpr erase(const_iterator first, const_iterator last) -> void;
-            auto constexpr clear() -> void;
+            auto constexpr clear() -> void
+            {
+                core::destroy(bod, eod);
+                bod = eod = (base_type::eos - base_type::bos) / 2;
+            }
 
             auto constexpr size() const noexcept -> size_type
             {
