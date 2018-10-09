@@ -387,14 +387,6 @@ namespace azuik
             }
 
         private:
-            auto constexpr alloc_ref() const noexcept -> allocator_type const&
-            {
-                return static_cast<allocator_type const&>(*this);
-            }
-            auto constexpr alloc_ref() noexcept -> allocator_type&
-            {
-                return static_cast<allocator_type&>(*this);
-            }
             template <class InIter>
             auto assign(InIter first, InIter last, core::input_iterator_tag) -> void
             {
