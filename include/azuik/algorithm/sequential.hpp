@@ -272,6 +272,20 @@ namespace azuik
         };
         inline constexpr copy_backward_fn copy_backward = {};
 
+        struct copy_reversed_fn {
+            template <class BiIter, class OutIter>
+            auto constexpr operator()(BiIter first, BiIter last, OutIter result) const -> OutIter
+            {
+                return ::std::reverse_copy(first, last, result);
+            }
+            template <class BiView, class OutIter>
+            auto constexpr operator()(BiView&& in, OutIter result) const -> OutIter
+            {
+                return (*this)(core::begin(in), core::end(in), result);
+            }
+        };
+        inline constexpr copy_reversed_fn copy_reversed = {};
+
         struct copy_while_fn {
             template <class InIter, class OutIter, class Pred>
             auto constexpr operator()(InIter first, InIter last, OutIter result, Pred p) const
