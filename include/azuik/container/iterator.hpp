@@ -32,12 +32,20 @@ namespace azuik
         };
 
         template <class I>
+        using iterator_difference = typename iterator_traits<I>::difference_type;
+        template <class I>
+        using iterator_value = typename iterator_traits<I>::value_type;
+        template <class I>
+        using iterator_reference = typename iterator_traits<I>::reference;
+        template <class I>
+        using iterator_pointer = typename iterator_traits<I>::pointer;
+        template <class I>
         using iterator_category = typename iterator_traits<I>::iterator_category;
 
         struct distance_fn {
             template <class InIter>
-            auto constexpr operator()(InIter first, InIter last) const
-                -> core::difference_type<InIter>
+            auto constexpr operator()(InIter first, InIter last) const noexcept
+                -> core::iterator_difference<InIter>
             {
                 return ::std::distance(first, last);
             }
@@ -46,7 +54,7 @@ namespace azuik
 
         struct next_fn {
             template <class FwdIter>
-            auto constexpr operator()(FwdIter it, core::difference_type<FwdIter> n = 1) const
+            auto constexpr operator()(FwdIter it, core::iterator_difference<FwdIter> n = 1) const
                 noexcept
             {
                 return ::std::next(it, n);
@@ -56,7 +64,8 @@ namespace azuik
 
         struct prev_fn {
             template <class BiIter>
-            auto constexpr operator()(BiIter it, core::difference_type<BiIter> n = 1) const noexcept
+            auto constexpr operator()(BiIter it, core::iterator_difference<BiIter> n = 1) const
+                noexcept
             {
                 return ::std::prev(it, n);
             }
