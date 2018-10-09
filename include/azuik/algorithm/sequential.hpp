@@ -313,6 +313,26 @@ namespace azuik
 
         inline constexpr copy_until_fn copy_until = {};
 
+        struct shift_right_fn {
+            template <class BiIter>
+            auto constexpr operator()(BiIter first, BiIter last, difference_type<BiIter> n) const
+                noexcept -> BiIter
+            {
+                return ::std::move_backward(first, std::prev(last, n), last);
+            }
+        };
+        inline constexpr shift_right_fn shift_right = {};
+
+        struct shift_left_fn {
+            template <class FwdIter>
+            auto constexpr operator()(FwdIter first, FwdIter last, difference_type<FwdIter> n) const
+                noexcept -> FwdIter
+            {
+                return ::std::move(first, last, std::prev(first, n));
+            }
+        };
+        inline constexpr shift_left_fn shift_left = {};
+
     } // namespace core
 } // namespace azuik
 #endif
