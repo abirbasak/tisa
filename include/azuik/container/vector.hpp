@@ -292,7 +292,7 @@ namespace azuik
             }
             auto constexpr erase(const_iterator p) -> iterator
             {
-                return erase(p, std::next(p));
+                return erase(p, core::next(p));
             }
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             void assign(InIter first, InIter last)
@@ -301,7 +301,7 @@ namespace azuik
             }
             void assign(size_type n, value_type const& x)
             {
-                if (remaining() < n)
+                if (capacity() < n)
                 {
                     self_type temp{n, x, base_type::alloc_ref()};
                     (*this).swap(temp);
@@ -412,8 +412,8 @@ namespace azuik
             template <class FwdIter>
             auto assign(FwdIter first, FwdIter last, core::forward_iterator_tag) -> void
             {
-                auto n = std::distance(first, last);
-                if (remaining() < n)
+                auto n = core::distance(first, last);
+                if (capacity() < n)
                 {
                     self_type temp{first, last, base_type::alloc_ref()};
                     (*this).swap(temp);
@@ -423,12 +423,12 @@ namespace azuik
                     if (n > size())
                     {
                         auto p = first + size();
-                        std::copy(first, p, base_type::bos);
+                        core::copy(first, p, base_type::bos);
                         eod = core::uninitialized_copy(p, last, eod);
                     }
                     else
                     {
-                        auto p = std::copy(first, last, base_type::bos);
+                        auto p = core::copy(first, last, base_type::bos);
                         eod = core::destroy(p, eod);
                     }
                 }
@@ -445,7 +445,7 @@ namespace azuik
             template <class FwdIter>
             void append(FwdIter first, FwdIter last, core::forward_iterator_tag)
             {
-                auto n = std::distance(first, last);
+                auto n = core::distance(first, last);
                 if (remaining() < n)
                 {
                     reserve(std::max(size() + n, 2 * size()));
@@ -468,7 +468,7 @@ namespace azuik
             auto constexpr insert(const_iterator p, FwdIter first, FwdIter last,
                                   core::forward_iterator_tag tag) -> iterator
             {
-                auto n = std::distance(first, last);
+                auto n = core::distance(first, last);
                 node_ptr pos = p.get_node();
                 size_type offset = pos - base_type::bos;
 
@@ -607,9 +607,12 @@ namespace azuik
                 return *this;
             }
 
-            auto constexpr assign(size_type n, value_type const& x) -> void;
+            auto constexpr assign(size_type n, value_type const& x) -> void {}
             template <class InIter>
-            auto constexpr assign(InIter first, InIter last) -> void;
+            auto constexpr assign(InIter first, InIter last) -> void
+            {
+                assign(first, last, core::iterator_category<InIter>{});
+            }
 
             auto constexpr swap(self_type& that) noexcept
             {
@@ -708,7 +711,7 @@ namespace azuik
             {
                 if (remaining_back() < n)
                 {
-                    reserve_back(std::min(n, size()));
+                    reserve_back(std::max(n, size()));
                 }
                 eod = core::uninitialized_fill_n(eod, n, x);
             }
@@ -716,7 +719,7 @@ namespace azuik
             {
                 if (remaining_front() < n)
                 {
-                    reserve_front(std::min(n, size()));
+                    reserve_front(std::max(n, size()));
                 }
                 core::uninitialized_fill_n(bod - n, n, x);
                 bod -= n;
@@ -734,8 +737,29 @@ namespace azuik
             auto constexpr insert(const_iterator p, InIter first, InIter last) -> iterator;
             auto constexpr insert(const_iterator p, size_type n, value_type const& x) -> iterator;
 
-            auto constexpr erase(const_iterator p) -> void;
-            auto constexpr erase(const_iterator first, const_iterator last) -> void;
+            auto constexpr erase(const_iterator p) -> iterator
+            {
+                return erase(p, core::next(p));
+            }
+            auto constexpr erase(const_iterator first, const_iterator last) -> iterator
+            {
+                pointer f = first.get_node();
+                pointer l = last.get_node();
+
+                if ((base_type::eos - l) > (f - base_type::bos))
+                {
+                    auto p = core::shift_left(l, eod, l - f);
+                    eod = core::destroy(p, eod);
+                }
+                else
+                {
+                    auto p = core::shift_right(bod, f, l - f);
+                    core::destroy(bod, p);
+                    bod = ++p;
+                }
+
+                return iterator{*this, first.get_node()};
+            }
             auto constexpr clear() -> void
             {
                 core::destroy(bod, eod);
@@ -818,6 +842,53 @@ namespace azuik
                 for (; first != last; ++first)
                 {
                     push_front(*first);
+                }
+            }
+            template <class InIter>
+            auto constexpr assign(InIter first, InIter last, core::input_iterator_tag) -> void
+            {
+                auto [c, p] = core::copy(first, last, base_type::bos, eod);
+                if (c == last)
+                {
+                    core::destroy(p, eod);
+                    eod = p;
+                }
+                else
+                {
+                    append(first, last);
+                }
+            }
+            template <class FwdIter>
+            auto constexpr assign(FwdIter first, FwdIter last, core::forward_iterator_tag) -> void
+            {
+                auto n = core::distance(first, last);
+                if (capacity() < n)
+                {
+                    self_type temp{first, last, base_type::alloc_ref()};
+                    (*this).swap(temp);
+                }
+                else
+                {
+                    if (n > size())
+                    {
+                        auto p = first + size();
+                        core::copy(first, p, base_type::bod);
+                        eod = core::uninitialized_copy(p, last, eod);
+                    }
+                    else
+                    {
+                        if (remaining_front() > remaining_back())
+                        {
+                            auto p = core::copy(first, last, base_type::bod);
+                            eod = core::destroy(p, eod);
+                        }
+                        else
+                        {
+                            auto p = core::copy_backward(first, last, base_type::eod);
+                            core::destroy(bod, p);
+                            bod = p;
+                        }
+                    }
                 }
             }
 
