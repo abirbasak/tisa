@@ -50,7 +50,7 @@ namespace azuik
                 {
                     return eos - bos;
                 }
-                auto constexpr alloc_ref() const noexcept -> allocator_type const&
+                auto constexpr get_allocator() const noexcept -> allocator_type
                 {
                     return static_cast<allocator_type const&>(*this);
                 }
@@ -76,13 +76,51 @@ namespace azuik
                 pointer eos;
             };
 
+            template <class S>
+            struct contiguous_operations {
+                auto constexpr operator==(S const& that) const noexcept -> bool
+                {
+                    return ((self().size() == that.size())
+                            && std::equal(self().begin(), self().end(), that.begin()));
+                }
+                auto constexpr operator!=(S const& that) const noexcept -> bool
+                {
+                    return ((self().size() != that.size())
+                            || !std::equal(self().begin(), self().end(), that.begin()));
+                }
+                auto constexpr operator<(S const& that) const noexcept -> bool
+                {
+                    return std::lexicographical_compare(self().begin(), self().end(), that.begin(),
+                                                        that.end());
+                }
+                auto constexpr operator>(S const& that) const noexcept -> bool
+                {
+                    return that < (*this);
+                }
+                auto constexpr operator<=(S const& that) const noexcept -> bool
+                {
+                    return !(that < (*this));
+                }
+                auto constexpr operator>=(S const& that) const noexcept -> bool
+                {
+                    return !((*this) < that);
+                }
+
+            private:
+                auto constexpr self() const noexcept -> S const&
+                {
+                    return static_cast<S const&>(*this);
+                }
+            };
+
         } // namespace detail_
 
         struct with_capacity {
             size_t value;
         };
         template <class T, class A>
-        class vector : private detail_::contiguous_storage<T, A> {
+        class vector : private detail_::contiguous_storage<T, A>,
+                       public detail_::contiguous_operations<vector<T, A>> {
         public:
             using self_type = vector;
             using allocator_type = core::allocator_type<self_type>;
@@ -99,61 +137,62 @@ namespace azuik
         private:
             template <class>
             friend class detail_::contiguous_policy;
-            using base_type = detail_::contiguous_storage<T, A>;
+            using storage_type = detail_::contiguous_storage<T, A>;
+            using base_type = detail_::contiguous_operations<vector<T, A>>;
             using node_ptr = pointer;
             using node_cptr = const_pointer;
 
         public:
             explicit constexpr vector(allocator_type const& a = {}) noexcept
-                : base_type{a}
-                , eod{base_type::bos}
+                : storage_type{a}
+                , eod{storage_type::bos}
             {}
             explicit constexpr vector(with_capacity c, allocator_type const& a = {}) noexcept
-                : base_type{c.value, a}
-                , eod{base_type::bos}
+                : storage_type{c.value, a}
+                , eod{storage_type::bos}
             {}
             explicit constexpr vector(size_type n, allocator_type const& a = {})
-                : base_type{n, a}
-                , eod{base_type::bos}
+                : storage_type{n, a}
+                , eod{storage_type::bos}
             {
                 eod = core::uninitialized_value_construct_n(eod, n);
             }
             explicit constexpr vector(size_type n, value_type const& x,
                                       allocator_type const& a = {})
-                : base_type{n, a}
-                , eod{base_type::bos}
+                : storage_type{n, a}
+                , eod{storage_type::bos}
             {
                 eod = core::uninitialized_fill_n(eod, n, x);
             }
 
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             constexpr vector(InIter first, InIter last, allocator_type const& a = {})
-                : base_type{a}
-                , eod{base_type::bos}
+                : storage_type{a}
+                , eod{storage_type::bos}
             {
                 append(first, last);
             }
             vector(self_type const& that)
-                : base_type{that.size(), that.get_allocator()}
-                , eod{base_type::bos}
+                : storage_type{that.size(), that.get_allocator()}
+                , eod{storage_type::bos}
             {
                 eod = core::uninitialized_copy(that.bos, that.eod, eod);
             }
             vector(self_type const& that, allocator_type const& a)
-                : base_type{that.size(), a}
-                , eod{base_type::bos}
+                : storage_type{that.size(), a}
+                , eod{storage_type::bos}
             {
                 eod = core::uninitialized_copy(that.bos, that.eod, eod);
             }
             vector(self_type&& that) noexcept
-                : base_type(static_cast<base_type&>(that))
+                : storage_type(static_cast<storage_type&>(that))
                 , eod{that.eod}
             {
                 that.bos = that.eos = that.eod = nullptr;
             }
             ~vector()
             {
-                core::destroy(base_type::bos, eod);
+                core::destroy(storage_type::bos, eod);
             }
             self_type& operator=(self_type& that)
             {
@@ -171,33 +210,34 @@ namespace azuik
                 }
                 return *this;
             }
-            auto constexpr get_allocator() const noexcept -> allocator_type
-            {
-                return base_type::alloc_ref();
-            }
-            auto constexpr capacity() const noexcept -> size_type
-            {
-                return base_type::capacity();
-            }
+            using storage_type::get_allocator;
+            using storage_type::capacity;
+            using base_type::operator==;
+            using base_type::operator!=;
+            using base_type::operator<;
+            using base_type::operator<=;
+            using base_type::operator>;
+            using base_type::operator>=;
+
             auto constexpr size() const noexcept -> size_type
             {
-                return eod - base_type::bos;
+                return eod - storage_type::bos;
             }
             auto constexpr remaining() const noexcept -> size_type
             {
-                return base_type::eos - eod;
+                return storage_type::eos - eod;
             }
             auto constexpr empty() const noexcept -> bool
             {
-                return eod == base_type::bos;
+                return eod == storage_type::bos;
             }
             auto constexpr full() const noexcept -> bool
             {
-                return eod == base_type::eos;
+                return eod == storage_type::eos;
             }
             auto constexpr begin() const noexcept -> const_iterator
             {
-                return const_iterator{*this, base_type::bos};
+                return const_iterator{*this, storage_type::bos};
             }
             auto constexpr end() const noexcept -> const_iterator
             {
@@ -205,7 +245,7 @@ namespace azuik
             }
             auto constexpr begin() noexcept -> iterator
             {
-                return iterator{*this, base_type::bos};
+                return iterator{*this, storage_type::bos};
             }
             auto constexpr end() noexcept -> iterator
             {
@@ -214,12 +254,12 @@ namespace azuik
             auto constexpr operator[](size_type i) noexcept -> reference
             {
                 assert(i < size() && "out_of_range");
-                return base_type::bos[i];
+                return storage_type::bos[i];
             }
             auto constexpr operator[](size_type i) const noexcept -> const_reference
             {
                 assert(i < size() && "out_of_range");
-                return base_type::bos[i];
+                return storage_type::bos[i];
             }
             template <class... Args>
             auto constexpr push_back(Args&&... args) -> void
@@ -260,13 +300,13 @@ namespace azuik
             auto constexpr insert(const_iterator p, size_type n, value_type const& x) -> iterator
             {
                 node_ptr pos = p.get_node();
-                size_type offset = pos - base_type::bos;
+                size_type offset = pos - storage_type::bos;
 
                 if (remaining() < n)
                 {
                     self_type temp;
                     temp.reserve(std::max(size() + n, 2 * size()));
-                    temp.eod = core::uninitialized_safe_move(base_type::bos, pos, temp.eod);
+                    temp.eod = core::uninitialized_safe_move(storage_type::bos, pos, temp.eod);
                     temp.eod = core::uninitialized_fill_n(temp.eod, n, x);
                     temp.eod = core::uninitialized_safe_move(pos, eod, temp.eod);
                     swap(temp);
@@ -275,9 +315,9 @@ namespace azuik
                 {
                     size_type old_size = size();
                     append(n, x);
-                    std::rotate(base_type::bos + offset, base_type::bos + old_size, eod);
+                    std::rotate(storage_type::bos + offset, storage_type::bos + old_size, eod);
                 }
-                return iterator{*this, base_type::bos + offset + n};
+                return iterator{*this, storage_type::bos + offset + n};
             }
             template <class InIter, core::disable_if<core::is_integral<InIter>, int> = 0>
             auto constexpr insert(const_iterator p, InIter first, InIter last) -> iterator
@@ -303,19 +343,19 @@ namespace azuik
             {
                 if (capacity() < n)
                 {
-                    self_type temp{n, x, base_type::alloc_ref()};
+                    self_type temp{n, x, storage_type::alloc_ref()};
                     (*this).swap(temp);
                 }
                 else
                 {
                     if (n > size())
                     {
-                        std::fill(base_type::bos, eod, x);
+                        std::fill(storage_type::bos, eod, x);
                         eod = core::uninitialized_fill_n(eod, n - size(), x);
                     }
                     else
                     {
-                        auto p = std::fill_n(base_type::bos, n, x);
+                        auto p = std::fill_n(storage_type::bos, n, x);
                         eod = core::destroy(p, eod);
                     }
                 }
@@ -324,8 +364,8 @@ namespace azuik
             {
                 if (n > capacity())
                 {
-                    self_type temp{with_capacity{n}, base_type::alloc_ref()};
-                    temp.eod = core::uninitialized_safe_move(base_type::bos, eod, temp.bos);
+                    self_type temp{with_capacity{n}, storage_type::alloc_ref()};
+                    temp.eod = core::uninitialized_safe_move(storage_type::bos, eod, temp.bos);
                     (*this).swap(temp);
                 }
             }
@@ -353,44 +393,20 @@ namespace azuik
             }
             auto constexpr clear() noexcept -> void
             {
-                eod = core::destroy(base_type::bos, eod);
+                eod = core::destroy(storage_type::bos, eod);
             }
 
             void swap(self_type& that) noexcept
             {
-                base_type::swap(static_cast<base_type&>(that));
+                storage_type::swap(static_cast<storage_type&>(that));
                 std::swap(eod, that.eod);
-            }
-            auto constexpr operator==(self_type const& that) const noexcept -> bool
-            {
-                return ((size() == that.size()) && std::equal(begin(), end(), that.begin()));
-            }
-            auto constexpr operator!=(self_type const& that) const noexcept -> bool
-            {
-                return ((size() != that.size()) || !std::equal(begin(), end(), that.begin()));
-            }
-            auto constexpr operator<(self_type const& that) const noexcept -> bool
-            {
-                return std::lexicographical_compare(begin(), end(), that.begin(), that.end());
-            }
-            auto constexpr operator>(self_type const& that) const noexcept -> bool
-            {
-                return that < (*this);
-            }
-            auto constexpr operator<=(self_type const& that) const noexcept -> bool
-            {
-                return !(that < (*this));
-            }
-            auto constexpr operator>=(self_type const& that) const noexcept -> bool
-            {
-                return !((*this) < that);
             }
 
         private:
             template <class InIter>
             auto assign(InIter first, InIter last, core::input_iterator_tag) -> void
             {
-                auto [c, p] = core::copy(first, last, base_type::bos, eod);
+                auto [c, p] = core::copy(first, last, storage_type::bos, eod);
                 if (c == last)
                 {
                     core::destroy(p, eod);
@@ -407,7 +423,7 @@ namespace azuik
                 auto n = core::distance(first, last);
                 if (capacity() < n)
                 {
-                    self_type temp{first, last, base_type::alloc_ref()};
+                    self_type temp{first, last, storage_type::alloc_ref()};
                     (*this).swap(temp);
                 }
                 else
@@ -415,12 +431,12 @@ namespace azuik
                     if (n > size())
                     {
                         auto p = first + size();
-                        core::copy(first, p, base_type::bos);
+                        core::copy(first, p, storage_type::bos);
                         eod = core::uninitialized_copy(p, last, eod);
                     }
                     else
                     {
-                        auto p = core::copy(first, last, base_type::bos);
+                        auto p = core::copy(first, last, storage_type::bos);
                         eod = core::destroy(p, eod);
                     }
                 }
@@ -449,11 +465,11 @@ namespace azuik
             auto constexpr insert(const_iterator p, InIter first, InIter last,
                                   core::input_iterator_tag tag) -> iterator
             {
-                size_type offset = p.get_node() - base_type::bos;
+                size_type offset = p.get_node() - storage_type::bos;
                 size_type old_size = size();
                 append(first, last, tag);
-                std::rotate(base_type::bos + offset, base_type::bos + old_size,
-                            base_type::bos + size());
+                std::rotate(storage_type::bos + offset, storage_type::bos + old_size,
+                            storage_type::bos + size());
                 return end() - old_size + offset;
             }
             template <class FwdIter>
@@ -462,13 +478,13 @@ namespace azuik
             {
                 auto n = core::distance(first, last);
                 node_ptr pos = p.get_node();
-                size_type offset = pos - base_type::bos;
+                size_type offset = pos - storage_type::bos;
 
                 if (remaining() < n)
                 {
                     self_type temp;
                     temp.reserve(std::max(size() + n, 2 * size()));
-                    temp.append(base_type::bos, pos);
+                    temp.append(storage_type::bos, pos);
                     temp.append(first, last);
                     temp.append(pos, eod);
                     swap(temp);
@@ -477,9 +493,9 @@ namespace azuik
                 {
                     size_type old_size = size();
                     append(first, last);
-                    std::rotate(base_type::bos + offset, base_type::bos + old_size, eod);
+                    std::rotate(storage_type::bos + offset, storage_type::bos + old_size, eod);
                 }
-                return iterator{*this, base_type::bos + offset};
+                return iterator{*this, storage_type::bos + offset};
             }
 
         private:
@@ -501,9 +517,11 @@ namespace azuik
         };
 
         template <class T, class A>
-        class dvector : detail_::contiguous_storage<T, A> {
+        class dvector : detail_::contiguous_storage<T, A>,
+                        detail_::contiguous_operations<dvector<T, A>> {
         private:
-            using base_type = detail_::contiguous_storage<T, A>;
+            using storage_type = detail_::contiguous_storage<T, A>;
+            using base_type = detail_::contiguous_operations<dvector<T, A>>;
 
         public:
             using self_type = dvector;
@@ -520,58 +538,58 @@ namespace azuik
 
         public:
             explicit constexpr dvector(allocator_type const& a = {}) noexcept
-                : base_type{a}
-                , bod{base_type::bos}
-                , eod{base_type::bos}
+                : storage_type{a}
+                , bod{storage_type::bos}
+                , eod{storage_type::bos}
             {}
             explicit constexpr dvector(with_capacity c, allocator_type const& a = {})
-                : base_type{c.value, a}
-                , bod{base_type::bos}
-                , eod{base_type::bos}
+                : storage_type{c.value, a}
+                , bod{storage_type::bos}
+                , eod{storage_type::bos}
             {}
 
             explicit constexpr dvector(size_type n, allocator_type const& a = {})
-                : base_type{n, a}
-                , bod{base_type::bos}
-                , eod{base_type::bos}
+                : storage_type{n, a}
+                , bod{storage_type::bos}
+                , eod{storage_type::bos}
             {
-                eod = core::uninitialized_value_construct_n(base_type::bod, n);
+                eod = core::uninitialized_value_construct_n(storage_type::bod, n);
             }
             explicit constexpr dvector(size_type n, value_type const& x,
                                        allocator_type const& a = {})
-                : base_type{n, a}
-                , bod{base_type::bos}
-                , eod{base_type::bos}
+                : storage_type{n, a}
+                , bod{storage_type::bos}
+                , eod{storage_type::bos}
             {
-                eod = core::uninitialized_fill_n(base_type::bod, n);
+                eod = core::uninitialized_fill_n(storage_type::bod, n);
             }
 
             template <class InIter>
             explicit constexpr dvector(InIter first, InIter last, allocator_type const& a = {})
-                : base_type{a}
-                , bod{base_type::bos}
-                , eod{base_type::bos}
+                : storage_type{a}
+                , bod{storage_type::bos}
+                , eod{storage_type::bos}
             {
                 append(first, last);
             }
 
             constexpr dvector(self_type const& that)
-                : base_type{that.size(), that.alloc_ref()}
-                , bod{base_type::bos}
-                , eod{base_type::bos}
+                : storage_type{that.size(), that.alloc_ref()}
+                , bod{storage_type::bos}
+                , eod{storage_type::bos}
             {
                 eod = core::uninitialized_copy(that.bod, that.eod, eod);
             }
             constexpr dvector(self_type const& that, allocator_type const& a)
-                : base_type{that.size(), a}
-                , bod{base_type::bos}
-                , eod{base_type::bos}
+                : storage_type{that.size(), a}
+                , bod{storage_type::bos}
+                , eod{storage_type::bos}
             {
                 eod = core::uninitialized_copy(that.bod, that.eod, eod);
             }
 
             constexpr dvector(self_type&& that) noexcept
-                : base_type{static_cast<base_type&&>(that)}
+                : storage_type{static_cast<storage_type&&>(that)}
                 , bod(that.bod)
                 , eod{that.eod}
             {
@@ -608,7 +626,7 @@ namespace azuik
 
             auto constexpr swap(self_type& that) noexcept
             {
-                base_type::swap(static_cast<base_type&>(that));
+                storage_type::swap(static_cast<storage_type&>(that));
                 std::swap(bod, that.bod);
                 std::swap(eod, that.eod);
             }
@@ -619,7 +637,7 @@ namespace azuik
                 {
                     size_type b = std::max(remaining_back(), f);
                     size_type c = f + size() + b;
-                    self_type temp{with_capacity{c}, base_type::alloc_ref()};
+                    self_type temp{with_capacity{c}, storage_type::alloc_ref()};
                     temp.eod = core::uninitialized_safe_move(bod, eod, temp.bos + f);
                     temp.bod = temp.bos + f;
                     (*this).swap(temp);
@@ -631,7 +649,7 @@ namespace azuik
                 {
                     size_type f = std::max(remaining_front(), b);
                     size_type c = f + size() + b;
-                    self_type temp{with_capacity{c}, base_type::alloc_ref()};
+                    self_type temp{with_capacity{c}, storage_type::alloc_ref()};
                     temp.eod = core::uninitialized_safe_move(bod, eod, temp.bos + f);
                     temp.bod = temp.bos + f;
                     (*this).swap(temp);
@@ -738,7 +756,7 @@ namespace azuik
                 pointer f = first.get_node();
                 pointer l = last.get_node();
 
-                if ((base_type::eos - l) > (f - base_type::bos))
+                if ((storage_type::eos - l) > (f - storage_type::bos))
                 {
                     auto p = core::shift_left(l, eod, l - f);
                     eod = core::destroy(p, eod);
@@ -755,25 +773,31 @@ namespace azuik
             auto constexpr clear() -> void
             {
                 core::destroy(bod, eod);
-                bod = eod = (base_type::eos - base_type::bos) / 2;
+                bod = eod = (storage_type::eos - storage_type::bos) / 2;
             }
+
+            using storage_type::get_allocator;
+            using storage_type::capacity;
+
+            using base_type::operator==;
+            using base_type::operator!=;
+            using base_type::operator<;
+            using base_type::operator<=;
+            using base_type::operator>;
+            using base_type::operator>=;
 
             auto constexpr size() const noexcept -> size_type
             {
                 return eod - bod;
             }
 
-            auto constexpr capacity() const noexcept -> size_type
-            {
-                return base_type::capacity();
-            }
             auto constexpr remaining_front() const noexcept -> size_type
             {
-                return bod - base_type::bos;
+                return bod - storage_type::bos;
             }
             auto constexpr remaining_back() const noexcept -> size_type
             {
-                return base_type::eos - eod;
+                return storage_type::eos - eod;
             }
             auto constexpr empty() const noexcept -> bool
             {
@@ -781,11 +805,11 @@ namespace azuik
             }
             auto constexpr full_front() const noexcept -> bool
             {
-                return bod == base_type::bos;
+                return bod == storage_type::bos;
             }
             auto constexpr full_back() const noexcept -> bool
             {
-                return base_type::eos == eod;
+                return storage_type::eos == eod;
             }
             auto constexpr begin() const noexcept -> const_iterator
             {
@@ -839,7 +863,7 @@ namespace azuik
             template <class InIter>
             auto constexpr assign(InIter first, InIter last, core::input_iterator_tag) -> void
             {
-                auto [c, p] = core::copy(first, last, base_type::bos, eod);
+                auto [c, p] = core::copy(first, last, storage_type::bos, eod);
                 if (c == last)
                 {
                     core::destroy(p, eod);
@@ -856,7 +880,7 @@ namespace azuik
                 auto n = core::distance(first, last);
                 if (capacity() < n)
                 {
-                    self_type temp{first, last, base_type::alloc_ref()};
+                    self_type temp{first, last, storage_type::alloc_ref()};
                     (*this).swap(temp);
                 }
                 else
@@ -864,19 +888,19 @@ namespace azuik
                     if (n > size())
                     {
                         auto p = first + size();
-                        core::copy(first, p, base_type::bod);
+                        core::copy(first, p, storage_type::bod);
                         eod = core::uninitialized_copy(p, last, eod);
                     }
                     else
                     {
                         if (remaining_front() > remaining_back())
                         {
-                            auto p = core::copy(first, last, base_type::bod);
+                            auto p = core::copy(first, last, storage_type::bod);
                             eod = core::destroy(p, eod);
                         }
                         else
                         {
-                            auto p = core::copy_backward(first, last, base_type::eod);
+                            auto p = core::copy_backward(first, last, storage_type::eod);
                             core::destroy(bod, p);
                             bod = p;
                         }
