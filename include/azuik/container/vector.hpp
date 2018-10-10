@@ -64,7 +64,7 @@ namespace azuik
                 }
                 auto constexpr deallocate(pointer p, size_type n) -> void
                 {
-                    return alloc_ref().template deallocate<value_type>(bos, n);
+                    return alloc_ref().template deallocate<value_type>(p, n);
                 }
                 auto constexpr swap(contiguous_storage& that) noexcept
                 {
@@ -136,7 +136,7 @@ namespace azuik
 
         private:
             template <class>
-            friend class detail_::contiguous_policy;
+            friend struct detail_::contiguous_policy;
             using storage_type = detail_::contiguous_storage<T, A>;
             using base_type = detail_::contiguous_operations<vector<T, A>>;
             using node_ptr = pointer;
@@ -194,7 +194,7 @@ namespace azuik
             {
                 core::destroy(storage_type::bos, eod);
             }
-            self_type& operator=(self_type& that)
+            auto constexpr operator=(self_type& that) -> vector&
             {
                 if (this != &that)
                 {
@@ -202,7 +202,7 @@ namespace azuik
                 }
                 return *this;
             }
-            self_type& operator=(self_type&& that)
+            auto constexpr operator=(self_type&& that) noexcept -> vector&
             {
                 if (this != &that)
                 {
@@ -474,7 +474,7 @@ namespace azuik
             }
             template <class FwdIter>
             auto constexpr insert(const_iterator p, FwdIter first, FwdIter last,
-                                  core::forward_iterator_tag tag) -> iterator
+                                  core::forward_iterator_tag) -> iterator
             {
                 auto n = core::distance(first, last);
                 node_ptr pos = p.get_node();
@@ -537,7 +537,7 @@ namespace azuik
             using base_type = detail_::contiguous_operations<dvector<T, A>>;
             using node_ptr = pointer;
             template <class>
-            friend class detail_::contiguous_policy;
+            friend struct detail_::contiguous_policy;
 
         public:
             explicit constexpr dvector(allocator_type const& a = {}) noexcept
@@ -564,7 +564,7 @@ namespace azuik
                 , bod{storage_type::bos}
                 , eod{storage_type::bos}
             {
-                eod = core::uninitialized_fill_n(storage_type::bod, n);
+                eod = core::uninitialized_fill_n(storage_type::bod, n, x);
             }
 
             template <class InIter>
@@ -603,7 +603,7 @@ namespace azuik
                 core::destroy(bod, eod);
             }
 
-            constexpr auto operator=(self_type const& that) -> self_type&
+            constexpr auto operator=(self_type const& that) -> dvector&
             {
                 if (this != &that)
                 {
@@ -611,7 +611,7 @@ namespace azuik
                 }
                 return *this;
             }
-            constexpr auto operator=(self_type&& that) -> self_type&
+            constexpr auto operator=(self_type&& that) noexcept -> dvector&
             {
                 if (this != &that)
                 {

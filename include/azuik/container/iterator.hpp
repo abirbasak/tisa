@@ -108,7 +108,7 @@ namespace azuik
             constexpr standard_iterator(nonconst_self that) noexcept
                 : base_type{static_cast<base_type&>(that)}
             {}
-            auto constexpr operator=(nonconst_self const& that) noexcept -> self_type&
+            auto constexpr operator=(nonconst_self const& that) noexcept -> standard_iterator&
             {
                 static_cast<base_type&>(*this) = static_cast<base_type const&>(that);
                 return *this;
@@ -253,7 +253,7 @@ namespace azuik
                 using reference = core::reference<S>;
 
             public:
-                constexpr explicit contiguous_policy(S* s, node_ptr ptr) noexcept
+                constexpr explicit contiguous_policy(S*, node_ptr ptr) noexcept
                     : m_ptr{ptr}
                 {}
                 constexpr auto deref() const noexcept -> reference

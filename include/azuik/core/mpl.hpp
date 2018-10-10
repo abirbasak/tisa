@@ -659,22 +659,23 @@ namespace azuik
     } // namespace core
 } // namespace azuik
 
-#    define AZUIK_SLOT(name, call)                                                                 \
-        struct name##_fn {                                                                         \
-            template <class T, class... Args>                                                      \
-            constexpr auto operator()(T&& x, Args&&... args) const                                 \
-            {                                                                                      \
-                return x.call(static_cast<Args&&>(args)...);                                       \
-            }                                                                                      \
-        } constexpr name {}
+#define AZUIK_SLOT(NAME, CALL)                                                                     \
+    struct NAME##_fn {                                                                             \
+        template <class T, class... Args>                                                          \
+        constexpr auto operator()(T&& x, Args&&... args) const                                     \
+        {                                                                                          \
+            return x.CALL(static_cast<Args&&>(args)...);                                           \
+        }                                                                                          \
+    };                                                                                             \
+    inline static constexpr NAME##_fn NAME = {}
 
-#    define AZUIK_HAS_NESTED_TYPE(NAME)                                                            \
-        template <class T, class E = ::azuik::core::defaulted>                                     \
-        struct has_type_##NAME##_c : ::azuik::core::false_c {};                                    \
-        template <class T>                                                                         \
-        struct has_type_##NAME##_c<T, ::azuik::core::when<typename T::NAME>>                       \
-            : ::azuik::core::true_c {};                                                            \
-        template <class T>                                                                         \
-        constexpr bool has_type_##NAME = has_type_##NAME##_c<T>::value
+#define AZUIK_HAS_NESTED_TYPE(NAME)                                                                \
+    template <class T, class E = ::azuik::core::defaulted>                                         \
+    struct has_type_##NAME##_c : ::azuik::core::false_c {};                                        \
+    template <class T>                                                                             \
+    struct has_type_##NAME##_c<T, ::azuik::core::when<typename T::NAME>> : ::azuik::core::true_c { \
+    };                                                                                             \
+    template <class T>                                                                             \
+    constexpr bool has_type_##NAME = has_type_##NAME##_c<T>::value
 
 #endif

@@ -124,7 +124,7 @@ namespace azuik
             }
             static void* align(void* ptr)
             {
-                alignment_type* aligned_ptr = reinterpret_cast<alignment_type*>(
+                auto* aligned_ptr = reinterpret_cast<alignment_type*>(
                     reinterpret_cast<std::size_t>(
                         (static_cast<unsigned char*>(ptr) + sizeof(alignment_type) + A::value - 1))
                     & ~(A::value - 1));
@@ -143,7 +143,7 @@ namespace azuik
             void* allocate(size_t sz, size_t alignment)
             {
                 assert(!(alignment & (alignment - 1)) && "improper alignment");
-                size_t* p = static_cast<size_t*>(std::malloc(sz + alignment));
+                auto* p = static_cast<size_t*>(std::malloc(sz + alignment));
                 if (nullptr == p)
                 {
                     throw std::bad_alloc();
@@ -157,7 +157,7 @@ namespace azuik
             template <class T>
             void dealloate(allocator_pointer<T, Alloc> p)
             {
-                size_t* mem = static_cast<size_t*>(p);
+                auto* mem = static_cast<size_t*>(p);
                 mem = mem - mem[-1];
                 Alloc::deallocate(allocator_pointer<T, Alloc>(mem));
             }
