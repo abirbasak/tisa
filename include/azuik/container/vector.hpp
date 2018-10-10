@@ -519,10 +519,6 @@ namespace azuik
         template <class T, class A>
         class dvector : detail_::contiguous_storage<T, A>,
                         detail_::contiguous_operations<dvector<T, A>> {
-        private:
-            using storage_type = detail_::contiguous_storage<T, A>;
-            using base_type = detail_::contiguous_operations<dvector<T, A>>;
-
         public:
             using self_type = dvector;
             using allocator_type = core::allocator_type<self_type>;
@@ -535,6 +531,13 @@ namespace azuik
             using const_pointer = core::const_pointer<self_type>;
             using iterator = core::iterator<self_type>;
             using const_iterator = core::const_iterator<self_type>;
+
+        private:
+            using storage_type = detail_::contiguous_storage<T, A>;
+            using base_type = detail_::contiguous_operations<dvector<T, A>>;
+            using node_ptr = pointer;
+            template <class>
+            friend class detail_::contiguous_policy;
 
         public:
             explicit constexpr dvector(allocator_type const& a = {}) noexcept
