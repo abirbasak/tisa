@@ -676,6 +676,6 @@ namespace azuik
     struct has_type_##NAME##_c<T, ::azuik::core::when<typename T::NAME>> : ::azuik::core::true_c { \
     };                                                                                             \
     template <class T>                                                                             \
-    constexpr bool has_type_##NAME = has_type_##NAME##_c<T>::value
+    inline constexpr bool has_type_##NAME = has_type_##NAME##_c<T>::value
 
 #endif
