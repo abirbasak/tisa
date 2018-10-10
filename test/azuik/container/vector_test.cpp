@@ -3,23 +3,30 @@
 AZUIK_TEST_SUIT(vector)
 {
     using namespace azuik;
+
     AZUIK_TEST_CASE(vec_test_1)
     {
-        core::vector<int> v;
-        auto const& cv = v;
+        tool::for_each_type<core::vector<int>, core::dvector<int>>([](auto x) {
+            using S = tool::tag_type<decltype(x)>;
+            auto name = tool::type_name<S>();
+            AZUIK_TEST_LOG("Type : %.*s ", name.size, name.data);
+            S v;
+            auto const& cv = v;
 
-        core::vector<int>::iterator it = v.begin();
-        core::vector<int>::const_iterator cit = cv.begin();
+            typename S::iterator it = v.begin();
+            typename S::const_iterator cit = cv.begin();
 
-        AZUIK_TEST(v.empty() == true);
-        AZUIK_TEST(v.size() == 0);
+            AZUIK_TEST(v.empty() == true);
+            AZUIK_TEST(v.size() == 0);
 
-        v.push_back(42);
+            v.push_back(42);
 
-        AZUIK_TEST(v.size() == 1);
+            AZUIK_TEST(v.size() == 1);
 
-        AZUIK_TEST(v[0] == 42);
+            AZUIK_TEST(v[0] == 42);
+        });
     }
+
     AZUIK_TEST_CASE(vec_test_2)
     {
         core::vector<core::vector<int>> vect(10);
