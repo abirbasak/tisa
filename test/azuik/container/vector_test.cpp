@@ -332,4 +332,64 @@ AZUIK_TEST_SUIT(vector)
         core::vector<IncompleteClass> instances;
         using It = core::vector<IncompleteClass>::iterator;
     };
+
+    AZUIK_TEST_CASE(empty)
+    {
+        using C = core::vector<int>;
+        C c;
+        AZUIK_TEST(c.empty());
+        c.push_back(C::value_type(1));
+        AZUIK_TEST(!c.empty());
+        c.clear();
+        AZUIK_TEST(c.empty());
+    }
+    AZUIK_TEST_CASE(size)
+    {
+        using C = core::vector<int>;
+        C c;
+
+        AZUIK_TEST(c.size() == 0);
+        c.push_back(C::value_type(2));
+        AZUIK_TEST(c.size() == 1);
+        c.push_back(C::value_type(1));
+        AZUIK_TEST(c.size() == 2);
+        c.push_back(C::value_type(3));
+        AZUIK_TEST(c.size() == 3);
+        c.erase(c.begin());
+        AZUIK_TEST(c.size() == 2);
+        c.erase(c.begin());
+        AZUIK_TEST(c.size() == 1);
+        c.erase(c.begin());
+        AZUIK_TEST(c.size() == 0);
+    }
+    AZUIK_TEST_CASE(reserve)
+    {
+        using C = core::vector<int>;
+        {
+            C v;
+            v.reserve(10);
+            AZUIK_TEST(v.capacity() >= 10);
+        }
+        {
+            C v(100);
+            AZUIK_TEST(v.capacity() == 100);
+            v.reserve(50);
+            AZUIK_TEST(v.size() == 100);
+            AZUIK_TEST(v.capacity() == 100);
+            v.reserve(150);
+            AZUIK_TEST(v.size() == 100);
+            AZUIK_TEST(v.capacity() == 150);
+        }
+    }
+    AZUIK_TEST_CASE(swap)
+    {
+        using C = core::vector<int>;
+        C v1(100);
+        C v2(200);
+        v1.swap(v2);
+        AZUIK_TEST(v1.size() == 200);
+        AZUIK_TEST(v1.capacity() == 200);
+        AZUIK_TEST(v2.size() == 100);
+        AZUIK_TEST(v2.capacity() == 100);
+    }
 }
