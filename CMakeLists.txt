@@ -12,9 +12,11 @@ target_compile_features(tisa PUBLIC cxx_std_17)
 
 option(TISA_BUILD_TESTS "Build tests" ON)
 if(TISA_BUILD_TESTS)
-    project(tisa-tests VERSION 1.0.0 LANGUAGES CXX)
+    project(tisa-test VERSION 1.0.0 LANGUAGES CXX)
+    file(GLOB_RECURSE TEST-HEADERS test/*.hpp)
     file(GLOB_RECURSE TEST-SOURCES test/*.cpp)
-    add_executable(tisa-test ${TEST-SOURCES})
+    add_executable(tisa-test ${TEST-HEADERS} ${TEST-SOURCES})
+    target_include_directories(tisa-test PRIVATE test)
     target_link_libraries(tisa-test tisa rusa)
 endif()
 
