@@ -1,5 +1,6 @@
 #include <azuik/container/vector.hpp>
 #include <azuik/tool/unit_test.hpp>
+#include <azuik/toolbox.hpp>
 AZUIK_TEST_SUIT(vector)
 {
     using namespace azuik;
@@ -379,6 +380,52 @@ AZUIK_TEST_SUIT(vector)
             v.reserve(150);
             AZUIK_TEST(v.size() == 100);
             AZUIK_TEST(v.capacity() == 150);
+        }
+    }
+    AZUIK_TEST_CASE(resize)
+    {
+        {
+            using C = core::vector<int>;
+            C v(100);
+            v.resize(50);
+            AZUIK_TEST(v.size() == 50);
+            AZUIK_TEST(v.capacity() == 100);
+            v.resize(200);
+            AZUIK_TEST(v.size() == 200);
+            AZUIK_TEST(v.capacity() >= 200);
+        }
+        /*
+        {
+            using C = core::vector<test::move_only>;
+            C v(100);
+            v.resize(50);
+            AZUIK_TEST(v.size() == 50);
+            AZUIK_TEST(v.capacity() == 100);
+
+            v.resize(200);
+            AZUIK_TEST(v.size() == 200);
+            AZUIK_TEST(v.capacity() >= 200);
+        }
+       */
+        {
+            using C = core::vector<int>;
+            C v(100);
+            v.resize(50, 1);
+            AZUIK_TEST(v.size() == 50);
+            AZUIK_TEST(v.capacity() == 100);
+            AZUIK_TEST(v == core::vector<int>(50));
+            v.resize(200, 1);
+            AZUIK_TEST(v.size() == 200);
+            AZUIK_TEST(v.capacity() >= 200);
+
+            for (unsigned i = 0; i < 50; ++i)
+            {
+                AZUIK_TEST(v[i] == 0);
+            }
+            for (unsigned i = 50; i < 200; ++i)
+            {
+                AZUIK_TEST(v[i] == 1);
+            }
         }
     }
     AZUIK_TEST_CASE(swap)
