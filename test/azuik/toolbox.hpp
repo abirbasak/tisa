@@ -4,20 +4,44 @@ namespace azuik
 {
     namespace test
     {
-        class move_only {
+        struct default_constructed {
+            int value;
+
+            default_constructed(const default_constructed&);
+            default_constructed& operator=(const default_constructed&);
+
         public:
-            move_only(int data = 1)
-                : data{data}
+            default_constructed()
+                : value{-1}
+            {}
+            ~default_constructed()
+            {
+                value = 0;
+            }
+
+            bool operator==(const default_constructed& that) const noexcept
+            {
+                return value == that.value;
+            }
+            bool operator<(const default_constructed& that) const noexcept
+            {
+                return value < that.value;
+            }
+        };
+
+        struct move_only {
+            move_only(int value = 1)
+                : value{value}
             {}
             move_only(move_only&& that) noexcept
-                : data{that.data}
+                : value{that.value}
             {
-                that.data = 0;
+                that.value = 0;
             }
             move_only& operator=(move_only&& that) noexcept
             {
-                data = that.data;
-                that.data = 0;
+                value = that.value;
+                that.value = 0;
                 return *this;
             }
             move_only(const move_only&) = delete;
@@ -25,22 +49,22 @@ namespace azuik
 
             bool operator==(const move_only& that) const noexcept
             {
-                return data == that.data;
+                return value == that.value;
             }
             bool operator<(const move_only& that) const noexcept
             {
-                return data < that.data;
+                return value < that.value;
             }
             move_only operator+(const move_only& that) const
             {
-                return move_only{data + that.data};
+                return move_only{value + that.value};
             }
             move_only operator*(const move_only& that) const
             {
-                return move_only{data * that.data};
+                return move_only{value * that.value};
             }
 
-            int data;
+            int value;
         };
     } // namespace test
 } // namespace azuik
