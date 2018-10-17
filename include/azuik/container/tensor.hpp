@@ -5,13 +5,28 @@ namespace azuik
 {
     namespace core
     {
-        using ssize_t = std::ptrdiff_t;
-
-        template <ssize_t... Extents>
+        template <size_t... Extents>
         class shape {
+        public:
+            template <class... Args>
+            shape(std::in_place_t, Args... e)
+                : value{e...}
+            {}
+            template <class... Args>
+            auto constexpr linear_index(Args... args) const noexcept -> size_t
+            {
+                std::array<size_t, sizeof...(Args)> coord{args...};
+                size_t offset = 0;
+                for (size_t i = 0; i != sizeof...(Args); ++i)
+                {
+                    offset += value[i] * coord[i];
+                }
+                return offset;
+            }
+
         private:
-            ssize_t value[sizeof...(Extents)];
-        };
+            size_t value[sizeof...(Extents)];
+        }; // namespace core
         template <class T, class Shape, class A>
         class tensor;
 
