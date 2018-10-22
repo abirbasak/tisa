@@ -55,22 +55,34 @@ namespace azuik
         struct next_fn {
             template <class FwdIter>
             auto constexpr operator()(FwdIter it, core::iterator_difference<FwdIter> n = 1) const
-                noexcept
+                noexcept -> FwdIter
             {
                 return ::std::next(it, n);
             }
         };
+
         inline constexpr next_fn next = {};
 
         struct prev_fn {
             template <class BiIter>
             auto constexpr operator()(BiIter it, core::iterator_difference<BiIter> n = 1) const
-                noexcept
+                noexcept -> BiIter
             {
                 return ::std::prev(it, n);
             }
         };
+
         inline constexpr prev_fn prev = {};
+
+        struct advance_fn {
+            template <class InIter, class Distance>
+            auto constexpr operator()(InIter& it, Distance n) const noexcept -> void
+            {
+                return ::std::advance(it, n);
+            }
+        };
+
+        inline constexpr advance_fn advance = {};
 
     } // namespace core
     namespace core
