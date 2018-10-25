@@ -10,7 +10,7 @@ AZUIK_TEST_SUIT(vector)
         tool::for_each_type<core::vector<int>, core::dvector<int>>([](auto x) {
             using S = tool::tag_type<decltype(x)>;
             auto name = tool::type_name<S>();
-            AZUIK_TEST_LOG("Type : %.*s ", name.size, name.data);
+            AZUIK_TEST_LOG("Type : %.*s ", name.size(), name.data());
             S v;
             auto const& cv = v;
 
