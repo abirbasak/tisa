@@ -11,13 +11,21 @@ namespace azuik
 {
     namespace core
     {
-        inline static constexpr struct is_alphanum_fn {
-            bool operator()(char c) const noexcept
-            {
-                return std::isalnum(c);
-            }
-        } const is_alphanum{};
-
+        inline constexpr auto to_upper = [](char c) { return std::toupper(c);};
+        inline constexpr auto to_lower = [](char c) { return std::tolower(c);};
+        
+        inline constexpr auto is_alpha = [](char c) { return std::isalpha(c);};
+        inline constexpr auto is_alphanum = [](char c) { return std::isalnum(c);};
+        inline constexpr auto is_space = [](char c) {return std::isspace(c);};
+        inline constexpr auto is_blank = [](char c) { return std::isblank(c);};
+        inline constexpr auto is_control = [](char c) { return std::iscntrl(c);};
+        inline constexpr auto is_punct = [](char c) { return std::ispunct(c);};
+        inline constexpr auto is_print = [](char c) { return std::isprint(c);};
+        inline constexpr auto is_digit = [](char c) { return std::isdigit(c);};
+        inline constexpr auto is_xdigit = [](char c) { return std::isxdigit(c);};
+        inline constexpr auto is_upper = [](char c) { return std::isupper(c);};
+        inline constexpr auto is_lower = [](char c) { return std::islower(c);};
+        
         inline static constexpr struct plus_eq_fn {
             template <class T>
             constexpr T operator()(T& x, T const& y) const noexcept
