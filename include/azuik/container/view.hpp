@@ -88,6 +88,8 @@ namespace azuik
             using value_type = F;
             using size_type = core::size_type<S>;
             using difference_type = core::difference_type<S>;
+            using iterator = core::iterator<S>;
+            using const_iterator = core::const_iterator<S>;
 
         public:
             explicit transform_view(sequence_type& s, function_type&& fn)
@@ -130,6 +132,38 @@ namespace azuik
         private:
             sequence_type* m_seq;
             function_type m_fn;
+        };
+
+        template <class Iter, class Sentinel = Iter>
+        class iterator_view {
+        public:
+            using iterator = Iter;
+            using const_iterator = Iter;
+            using sentinel = Sentinel;
+            using value_type = core::iterator_value<Iter>;
+            using difference_type = core::difference_type<Iter>;
+
+        public:
+            constexpr iterator_view() noexcept
+                : m_begin{}
+                , m_end{}
+            {}
+            constexpr iterator_view(iterator f, iterator l) noexcept
+                : m_begin{f}
+                , m_end{l}
+            {}
+            auto constexpr begin() noexcept -> iterator
+            {
+                return m_begin;
+            }
+            auto constexpr end() noexcept -> sentinel
+            {
+                return m_end;
+            }
+
+        private:
+            iterator m_begin;
+            sentinel m_end;
         };
 
         template <class S>
