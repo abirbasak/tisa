@@ -117,8 +117,8 @@ namespace azuik
                 : base_type{nullptr, nullptr}
             {}
 
-            constexpr standard_iterator(nonconst_self that) noexcept
-                : base_type{static_cast<base_type&>(that)}
+            constexpr standard_iterator(nonconst_self const& that) noexcept
+                : base_type{static_cast<base_type const&>(that)}
             {}
             auto constexpr operator=(nonconst_self const& that) noexcept -> standard_iterator&
             {

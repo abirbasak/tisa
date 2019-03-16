@@ -132,7 +132,7 @@ namespace azuik
 
         public:
             using base_type::get_allocator;
-            using base_type::key_compare;
+            using base_type::key_comp;
 
             using base_type::begin;
             using base_type::end;
