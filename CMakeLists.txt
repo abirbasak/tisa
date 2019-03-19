@@ -9,6 +9,7 @@ add_library(tisa STATIC ${HEADERS} ${SOURCES})
 target_include_directories(tisa PUBLIC include )
 target_compile_definitions(tisa PUBLIC )
 target_compile_features(tisa PUBLIC cxx_std_17)
+target_link_libraries(tisa PRIVATE sqlite3)
 
 option(TISA_BUILD_TESTS "Build tests" ON)
 if(TISA_BUILD_TESTS)
@@ -19,6 +20,15 @@ if(TISA_BUILD_TESTS)
     target_include_directories(tisa-test PRIVATE test)
     target_link_libraries(tisa-test tisa rusa)
 endif()
+
+option(TISA_BUILD_EXAMPLES "Build examples" ON)
+if(TISA_BUILD_EXAMPLES)
+    project(sqlite-example VERSION 1.0.0 LANGUAGES CXX)
+    add_executable(sqlite-example examples/sqlite-example.cpp)
+    target_link_libraries(sqlite-example tisa)
+    
+endif()
+
 
 project(tisa-macro VERSION 1.0.0 LANGUAGES CXX)
 add_executable(tisa-macro tools/tisa-macro.cpp)
