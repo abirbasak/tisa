@@ -27,6 +27,9 @@ if(TISA_BUILD_EXAMPLES)
     add_executable(sqlite-example examples/sqlite-example.cpp)
     target_link_libraries(sqlite-example tisa)
     
+    project(persistence-example VERSION 1.0.0 LANGUAGES CXX)
+    add_executable(persistence-example examples/sqlite-example.cpp)
+    target_link_libraries(persistence-example tisa)
 endif()
 
 
