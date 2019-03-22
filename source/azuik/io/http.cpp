@@ -107,6 +107,12 @@ namespace azuik
                 {}
                 static void on_read(::uv_stream_t* stream, ssize_t nread, ::uv_buf_t const* buffer)
                 {}
+                static void on_write(uv_write_t* write_request, int status)
+                {
+                    (void)status;
+                    ::uv_close(as_handle(write_request->handle), on_close);
+                    delete write_request;
+                }
                 static void on_shutdown(uv_shutdown_t* shutdown_request, int status)
                 {
                     (void)status;

@@ -28,9 +28,11 @@ namespace azuik
                 std::aligned_storage_t<14 * sizeof(std::uint16_t)> m_storage;
             };
 
+            enum class method_type { GET, POST, DELETE, PUT, HEAD, OPTIONS };
+
             struct request {
                 std::string url;
-                std::string method;
+                method_type method;
                 std::string status_code;
                 std::string body;
                 std::map<std::string, std::string> headers;
