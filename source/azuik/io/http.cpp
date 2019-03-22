@@ -65,6 +65,35 @@ namespace azuik
                 return helper::field<UF_QUERY>(*this);
             }
 
+            struct context {
+                ::uv_tcp_t handle;
+                ::http_parser parser;
+                ::http_parser_settings settings;
+            };
+
+            struct server::implementation {
+                implementation(char const* host, int port)
+                    : m_host{host}
+                    , m_port{port}
+                    , m_event_loop{::uv_default_loop()}
+                    , m_context{}
+                {}
+                void run() {}
+
+            private:
+                char const* m_host;
+                int m_port;
+                ::uv_loop_t m_event_loop;
+                context m_context;
+            };
+
+            server::server(char const* host, int port)
+                : m_impl{std::make_unique<implementation>(host, port)}
+            {}
+            void server::run()
+            {
+                m_impl->run();
+            }
         } // namespace http
     }     // namespace net
 

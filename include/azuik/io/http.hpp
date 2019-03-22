@@ -28,7 +28,24 @@ namespace azuik
                 std::aligned_storage_t<14 * sizeof(std::uint16_t)> m_storage;
             };
 
-                } // namespace http
+            struct request {
+                std::string url;
+                std::string method;
+                std::string status_code;
+                std::string body;
+                std::map<std::string, std::string> headers;
+            };
+            class server {
+            public:
+                server(char const* host, int port);
+                void run();
+
+            private:
+                struct implementation;
+                std::unique_ptr<implementation> m_impl;
+            };
+
+        } // namespace http
     }     // namespace net
 } // namespace azuik
 #endif
