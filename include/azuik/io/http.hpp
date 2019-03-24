@@ -47,6 +47,10 @@ namespace azuik
                 std::unique_ptr<implementation> m_impl;
             };
 
+            class client {
+
+            };
+
         } // namespace http
     }     // namespace net
 } // namespace azuik
