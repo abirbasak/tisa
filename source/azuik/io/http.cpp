@@ -31,7 +31,6 @@ namespace azuik
                 }
             };
 
-
             url::url(std::string const& s)
                 : m_url{s}
             {
@@ -70,44 +69,6 @@ namespace azuik
                 ::uv_tcp_t handle;
                 ::http_parser parser;
                 ::http_parser_settings settings;
-
-                context() {
-                    settings.on_url = &on_url;
-                    settings.on_header_field = &on_header_field;
-                    settings.on_header_value = &on_header_value;
-                    settings.on_headers_complete = &on_headers_complete;
-                    settings.on_body = &on_body;
-                    settings.on_message_complete = &on_message_complete;
-
-                }
-                static int on_url(::http_parser* parser,char const* p,std::size_t n) {
-                    auto* ctx = reinterpret_cast<context*>(parser->data);
-                    return 0;
-                }
-                static int on_header_field(::http_parser* parser,char const* p,std::size_t n) {
-                    (void)parser;
-                    (void)p;
-                    (void)n;
-                    return 0;
-                }
-                static int on_header_value(::http_parser* parser,char const* p,std::size_t n) {
-                    (void)parser;
-                    (void)p;
-                    (void)n;
-                    return 0;
-                }
-                static int on_headers_complete(::http_parser* parser) {
-                    auto* ctx = reinterpret_cast<context*>(parser->data);
-                    return 0;
-                }
-                static int on_body(::http_parser* parser,char const* p,std::size_t n) {
-                    auto* ctx = reinterpret_cast<context*>(parser->data);
-                    return 0;
-                }
-                static int on_message_complete(::http_parser* parser) {
-                     auto* ctx = reinterpret_cast<context*>(parser->data);
-                    return 0;
-                }
             };
 
             struct server::implementation {
@@ -129,9 +90,7 @@ namespace azuik
                 {
                     auto* ctx = new context{};
                     checked >> ::uv_tcp_init(stream->loop, &ctx->handle);
-                    ::http_parser_init(&ctx->parser, HTTP_REQUEST);
                     ctx->handle.data = ctx;
-                    ctx->parser.data = ctx;
                     int r = ::uv_accept(stream, as_stream(&ctx->handle));
                     if (r != 0)
                     {
@@ -139,6 +98,8 @@ namespace azuik
                         checked >> ::uv_shutdown(shutdown_request, as_stream(&ctx->handle),
                                                  on_shutdown);
                     }
+                    ::http_parser_init(&ctx->parser, HTTP_REQUEST);
+                    ctx->parser.data = ctx;
                     checked >> ::uv_read_start(as_stream(&ctx->handle), on_alloc, on_read);
                 }
                 static void on_alloc(::uv_handle_t* handle, std::size_t suggested_size,
@@ -190,6 +151,8 @@ namespace azuik
             {
                 m_impl->run();
             }
+
+            struct route {};
         } // namespace http
     }     // namespace net
 
