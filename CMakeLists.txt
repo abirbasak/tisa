@@ -37,6 +37,10 @@ if(TISA_BUILD_EXAMPLES)
     project(persistence-example VERSION 1.0.0 LANGUAGES CXX)
     add_executable(persistence-example examples/sqlite-example.cpp)
     target_link_libraries(persistence-example tisa)
+
+    project(svg-example VERSION 1.0.0 LANGUAGES CXX)
+    add_executable(svg-example examples/svg-example.cpp)
+    target_link_libraries(svg-example tisa)
 endif()
 
 
