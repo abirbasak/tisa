@@ -2,7 +2,7 @@
 #define AZUIK_NET_HTTP_HPP
 #include <string>
 #include <string_view>
-#include <map>
+#include <unordered_map>
 #include <cassert>
 #include <memory>
 #include <type_traits>
@@ -35,7 +35,7 @@ namespace azuik
                 method_type method;
                 std::string status_code;
                 std::string body;
-                std::map<std::string, std::string> headers;
+                std::unordered_multimap<std::string, std::string> headers;
             };
             class server {
             public:
@@ -47,9 +47,7 @@ namespace azuik
                 std::unique_ptr<implementation> m_impl;
             };
 
-            class client {
-
-            };
+            class client {};
 
         } // namespace http
     }     // namespace net
