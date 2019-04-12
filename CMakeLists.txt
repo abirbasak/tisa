@@ -9,6 +9,11 @@ file(GLOB_RECURSE HEADERS include/*.hpp)
 file(GLOB_RECURSE SOURCES source/*.cpp)
 add_library(tisa STATIC ${HEADERS} ${SOURCES})
 
+group_sources(include)
+group_sources(source)
+group_sources(test)
+group_sources(examples)
+
 target_include_directories(tisa PUBLIC include )
 target_compile_definitions(tisa PUBLIC )
 target_compile_features(tisa PUBLIC cxx_std_17)
@@ -30,17 +35,18 @@ endif()
 
 option(TISA_BUILD_EXAMPLES "Build examples" ON)
 if(TISA_BUILD_EXAMPLES)
-    project(sqlite-example VERSION 1.0.0 LANGUAGES CXX)
-    add_executable(sqlite-example examples/sqlite-example.cpp)
-    target_link_libraries(sqlite-example tisa)
+    project(tisa-sqlite VERSION 1.0.0 LANGUAGES CXX)
+    add_executable(tisa-sqlite examples/sqlite-example.cpp)
+    target_link_libraries(tisa-sqlite tisa)
     
-    project(persistence-example VERSION 1.0.0 LANGUAGES CXX)
-    add_executable(persistence-example examples/sqlite-example.cpp)
-    target_link_libraries(persistence-example tisa)
+    project(tisa-persistence VERSION 1.0.0 LANGUAGES CXX)
+    add_executable(tisa-persistence examples/sqlite-example.cpp)
+    target_link_libraries(tisa-persistence tisa)
 
     project(svg-example VERSION 1.0.0 LANGUAGES CXX)
-    add_executable(svg-example examples/svg-example.cpp)
-    target_link_libraries(svg-example tisa)
+    add_executable(tisa-svg examples/svg-example.cpp)
+    target_link_libraries(tisa-svg tisa)
+    
 endif()
 
 
