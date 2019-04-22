@@ -5,6 +5,7 @@
 #include <azuik/algorithm/functional.hpp>
 #include <azuik/algorithm/sequential.hpp>
 #include <algorithm>
+#include <vector>
 namespace azuik
 {
     namespace core

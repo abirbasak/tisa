@@ -178,6 +178,7 @@ namespace azuik
                 case svg::linejoin::miter: return os << "miter";
                 case svg::linejoin::round: return os << "round";
             }
+            return os;
         }
         std::ostream& operator<<(std::ostream& os, svg::linecap x)
         {
@@ -187,6 +188,7 @@ namespace azuik
                 case svg::linecap::square: return os << "square";
                 case svg::linecap::butt: return os << "butt";
             }
+            return os;
         }
         std::ostream& operator<<(std::ostream& os, svg::anchor x)
         {
@@ -196,6 +198,7 @@ namespace azuik
                 case svg::anchor::middle: return os << "middle";
                 case svg::anchor::end: return os << "end";
             }
+            return os;
         }
         template <class T>
         void write_attributes(T const& self, std::ostream& os);

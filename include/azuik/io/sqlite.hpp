@@ -3,7 +3,8 @@
 
 #include <stdexcept>
 #include <string>
-#include <sqlite3.h>
+struct sqlite3;
+struct sqlite3_stmt;
 namespace azuik
 {
     namespace sql
@@ -87,7 +88,7 @@ namespace azuik
             native_handle_type m_handle;
         };
 
-        using index_type = sqlite3_int64;
+        using index_type = std::int64_t;
 
         class database {
         public:

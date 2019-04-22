@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(tisa VERSION 1.0.0 LANGUAGES CXX)
 
+find_package(sqlite3 CONFIG REQUIRED)
 find_package(unofficial-libuv CONFIG REQUIRED)
 find_package(unofficial-http-parser CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
