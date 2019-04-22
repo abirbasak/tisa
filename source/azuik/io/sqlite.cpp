@@ -1,5 +1,6 @@
 #include <azuik/io/sqlite.hpp>
 #include <sqlite3.h>
+#include <assert.h>
 namespace azuik::sql
 {
     struct checked_type {
